@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kangourou des Mathématiques - Entraînement</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1320px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .level-selector {
+            background: #f8f9fa;
+            padding: 25px;
+            border-bottom: 3px solid #e9ecef;
+        }
+
+        .level-selector h2 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .level-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .level-btn {
+            padding: 15px 20px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #495057;
+        }
+
+        .level-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .level-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .year-selector {
+            background: #fff;
+            padding: 20px 25px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .year-selector h3 {
+            margin-bottom: 12px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .year-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .year-btn {
+            padding: 10px 18px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .year-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .year-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .timer-bar {
+            background: #fff3cd;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ffc107;
+        }
+
+        .timer {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .timer.warning {
+            color: #dc3545;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .progress-info {
+            font-size: 0.95em;
+            color: #856404;
+        }
+
+        .game-strip {
+            background: linear-gradient(135deg, #2c3e50, #4b79a1);
+            color: white;
+            padding: 14px 25px;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .mini-pill {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 0.9em;
+            font-weight: 700;
+            width: fit-content;
+        }
+
+        .xp-track {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .xp-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #ffe082, #ffd54f, #ffca28);
+        }
+
+        .question-container {
+            padding: 30px;
+            min-height: 400px;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .question-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .question-points {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .question-text {
+            font-size: 1.15em;
+            line-height: 1.6;
+            color: #2d3748;
+            margin-bottom: 25px;
+        }
+
+        .question-image {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 18px 22px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.05em;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: linear-gradient(to right, #667eea10, #764ba210);
+            border-width: 3px;
+        }
+
+        .option.correct {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .option.incorrect {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .option-letter {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .option.selected .option-letter {
+            background: #764ba2;
+        }
+
+        .option.correct .option-letter {
+            background: #28a745;
+        }
+
+        .option.incorrect .option-letter {
+            background: #dc3545;
+        }
+
+        .navigation {
+            padding: 25px 30px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .nav-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .nav-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .nav-btn.secondary:hover {
+            background: #f8f9ff;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .skip-btn {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.2s ease;
+        }
+
+        .skip-btn:hover {
+            background: #5a6268;
+        }
+
+        .results {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .results h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .score-display {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .score-display .score {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .score-display .max-score {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #6c757d;
+            font-size: 0.95em;
+        }
+
+        .welcome {
+            padding: 36px 32px 42px 32px;
+        }
+
+        .welcome-layout {
+            display: grid;
+            grid-template-columns: minmax(250px, 320px) 1fr;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .welcome-main {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .welcome h2,
+        .welcome-title {
+            font-size: 2.2em;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .welcome p,
+        .welcome-intro {
+            font-size: 1.15em;
+            color: #6c757d;
+            line-height: 1.8;
+            max-width: 700px;
+        }
+
+        .welcome .rules {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: left;
+        }
+
+        .welcome .rules h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .welcome .rules ul {
+            list-style-position: inside;
+            color: #856404;
+        }
+
+        .welcome .rules li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .welcome-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+        }
+
+        .control-card {
+            border: 1px solid #dbe3ff;
+            border-radius: 12px;
+            padding: 15px;
+            background: linear-gradient(180deg, #ffffff, #f8faff);
+            text-align: left;
+            box-shadow: 0 8px 20px rgba(38, 73, 170, 0.08);
+        }
+
+        .control-title {
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .chip-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip-btn {
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 999px;
+            background: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .chip-btn.active {
+            background: #667eea;
+            color: #fff;
+            border-color: #667eea;
+        }
+
+        .profile-name-input {
+            width: 100%;
+            margin-top: 10px;
+            padding: 9px 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .tiny-btn {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .profile-stats {
+            background: linear-gradient(180deg, #f8f9fa, #eef2ff);
+            border: 1px solid #d9e0ff;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: left;
+        }
+
+        .profile-hero {
+            background: linear-gradient(135deg, #1f2937, #334155);
+            color: #fff;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: left;
+        }
+
+        .badge-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .badge-chip {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.82em;
+            font-weight: 700;
+        }
+
+        .reward-card {
+            border: 2px solid #ffe08a;
+            background: linear-gradient(135deg, #fff7d6, #fff1b8);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .history-list {
+            margin-top: 10px;
+            font-size: 0.92em;
+            color: #495057;
+            line-height: 1.6;
+        }
+
+        .welcome .year-selector {
+            background: linear-gradient(135deg, #f3f7ff, #f6fffb);
+            border: 1px solid #d7e4ff;
+            border-radius: 12px;
+            padding: 16px;
+            position: sticky;
+            top: 16px;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .resume-btn {
+            background: linear-gradient(135deg, #17a2b8, #20c997);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 16px;
+        }
+
+        .reset-btn {
+            background: #fff;
+            color: #6c757d;
+            border: 2px solid #ced4da;
+            padding: 11px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 18px 45px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .explanation {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .explanation h4 {
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .explanation p {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .question-dot {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .question-dot:hover {
+            transform: scale(1.1);
+            border-color: #667eea;
+        }
+
+        .question-dot.answered {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .question-dot.current {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .question-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+
+            .game-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome {
+                padding: 24px 16px 28px 16px;
+            }
+
+            .welcome-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome .year-selector {
+                position: static;
+            }
+
+            .welcome-actions {
+                width: 100%;
+            }
+            
+            .level-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // Base de données des questions - Sujet E 2025 (CE2-CM1-CM2)
+        const questionsData = {
+            E2025: {
+                title: "Sujet E 2025 (CE2-CM1-CM2)",
+                duration: 50,
+                questions: [
+                    {
+                        id: 1,
+                        points: 3,
+                        text: "Quel chiffre est à l'extérieur du cercle ?",
+                        image: "exercises/2025/q01.png",
+                        options: [
+                            { letter: "A", text: "0" },
+                            { letter: "B", text: "2" },
+                            { letter: "C", text: "3" },
+                            { letter: "D", text: "5" },
+                            { letter: "E", text: "8" }
+                        ],
+                        correct: "D",
+                        explanation: "Les chiffres à l'intérieur du cercle sont: 0, 2, 3, 8. Le chiffre 5 est donc à l'extérieur."
+                    },
+                    {
+                        id: 2,
+                        points: 3,
+                        text: "Elsa rajoute des cubes un par un pour réaliser un grand cube de 3×3×3. Voici 5 étapes de sa construction. Dans quel ordre ont-elles été réalisées ?",
+                        image: "exercises/2025/q02.png",
+                        options: [
+                            { letter: "A", text: "1 2 3 4 5" },
+                            { letter: "B", text: "4 5 2 1 3" },
+                            { letter: "C", text: "3 1 5 2 4" },
+                            { letter: "D", text: "4 2 5 1 3" },
+                            { letter: "E", text: "4 2 1 5 3" }
+                        ],
+                        correct: "E",
+                        explanation: "Il faut suivre la progression logique de construction du cube en ajoutant les cubes un par un."
+                    },
+                    {
+                        id: 3,
+                        points: 3,
+                        text: "Alex marche sur des traces au sol. Quel dessin peut représenter les traces sur lesquelles il a posé son pied ?",
+                        image: "exercises/2025/q03.png",
+                        options: [
+                            { letter: "A", text: "Option A" },
+                            { letter: "B", text: "Option B" },
+                            { letter: "C", text: "Option C" },
+                            { letter: "D", text: "Option D" },
+                            { letter: "E", text: "Option E" }
+                        ],
+                        correct: "C",
+                        explanation: "Il faut observer la symétrie et l'orientation des traces de pas."
+                    },
+                    {
+                        id: 4,
+                        points: 3,
+                        text: "Quel est le plus grand nombre de 4 chiffres qu'on peut écrire en utilisant deux fois le chiffre 2 et une fois les chiffres 5 et 0 ?",
+                        image: "exercises/2025/q04.png",
+                        options: [
+                            { letter: "A", text: "2025" },
+                            { letter: "B", text: "5520" },
+                            { letter: "C", text: "7025" },
+                            { letter: "D", text: "5220" },
+                            { letter: "E", text: "5025" }
+                        ],
+                        correct: "D",
+                        explanation: "Pour avoir le plus grand nombre, on place le chiffre le plus grand en premier (5), puis 2, 2, et 0 à la fin: 5220."
+                    },
+                    {
+                        id: 5,
+                        points: 3,
+                        text: "Voici le parasol de Gabin vu de dessus. Lequel des dessins suivants montre aussi le parasol de Gabin vu de dessus ?",
+                        image: "exercises/2025/q05.png",
+                        options: [
+                            { letter: "A", text: "Option A" },
+                            { letter: "B", text: "Option B" },
+                            { letter: "C", text: "Option C" },
+                            { letter: "D", text: "Option D" },
+                            { letter: "E", text: "Option E" }
+                        ],
+                        correct: "B",
+                        explanation: "Il faut identifier la rotation correcte du motif du parasol."
+                    },
+                    {
+                        id: 6,
+                        points: 3,
+                        text: "Dans le jeu d'Océane, une coquille vaut 6 et une bille vaut 1. Lequel de ces dessins représente une valeur de 16 ?",
+                        image: "exercises/2025/q06.png",
+                        options: [
+                            { letter: "A", text: "Option A" },
+                            { letter: "B", text: "Option B" },
+                            { letter: "C", text: "Option C" },
+                            { letter: "D", text: "Option D" },
+                            { letter: "E", text: "Option E" }
+                        ],
+                        correct: "D",
+                        explanation: "Il faut compter: 2 coquilles (2×6=12) + 4 billes (4×1=4) = 16."
+                    },
+                    {
+                        id: 7,
+                        points: 3,
+                        text: "Une seule de ces cordes fait un nœud si on tire sur ses deux extrémités. Laquelle ?",
+                        image: "exercises/2025/q07.png",
+                        options: [
+                            { letter: "A", text: "Corde A" },
+                            { letter: "B", text: "Corde B" },
+                            { letter: "C", text: "Corde C" },
+                            { letter: "D", text: "Corde D" },
+                            { letter: "E", text: "Corde E" }
+                        ],
+                        correct: "C",
+                        explanation: "En tirant sur les deux extrémités, seule la corde C forme un vrai nœud."
+                    },
+                    {
+                        id: 8,
+                        points: 3,
+                        text: "Léa veut couper sa pizza en deux moitiés. Elle veut que chaque moitié contienne le même nombre d'olives. Pour cela, elle coupe le long d'un des traits dessinés en pointillé. Lequel ?",
+                        image: "exercises/2025/q08.png",
+                        options: [
+                            { letter: "A", text: "le trait 1" },
+                            { letter: "B", text: "le trait 2" },
+                            { letter: "C", text: "le trait 3" },
+                            { letter: "D", text: "le trait 4" },
+                            { letter: "E", text: "le trait 5" }
+                        ],
+                        correct: "C",
+                        explanation: "Le trait 3 partage la pizza de façon à avoir le même nombre d'olives de chaque côté."
+                    },
+                    {
+                        id: 9,
+                        points: 4,
+                        text: "Le trajet de l'école au zoo peut être codé. Si un kangourou sort du zoo et suit le trajet codé, où arrivera-t-il ?",
+                        image: "exercises/2025/q09.png",
+                        options: [
+                            { letter: "A", text: "A" },
+                            { letter: "B", text: "B" },
+                            { letter: "C", text: "C" },
+                            { letter: "D", text: "D" },
+                            { letter: "E", text: "E" }
+                        ],
+                        correct: "B",
+                        explanation: "En suivant le trajet codé depuis le zoo, on arrive au point B."
+                    },
+                    {
+                        id: 10,
+                        points: 4,
+                        text: "Un dé normal a des faces avec 1, 2, 3, 4, 5 et 6 points et la somme des points de deux faces opposées vaut toujours 7. Dans les dés vus ci-dessous, un seul peut être un dé normal. Lequel?",
+                        image: "exercises/2025/q10.png",
+                        options: [
+                            { letter: "A", text: "Dé A" },
+                            { letter: "B", text: "Dé B" },
+                            { letter: "C", text: "Dé C" },
+                            { letter: "D", text: "Dé D" },
+                            { letter: "E", text: "Dé E" }
+                        ],
+                        correct: "D",
+                        explanation: "Seul le dé D respecte la règle: faces opposées = 7 (1+6, 2+5, 3+4)."
+                    },
+                    {
+                        id: 11,
+                        points: 4,
+                        text: "Quelle est la pièce à poser pour compléter le damier ?",
+                        image: "exercises/2025/q11.png",
+                        options: [
+                            { letter: "A", text: "Pièce A" },
+                            { letter: "B", text: "Pièce B" },
+                            { letter: "C", text: "Pièce C" },
+                            { letter: "D", text: "Pièce D" },
+                            { letter: "E", text: "Pièce E" }
+                        ],
+                        correct: "C",
+                        explanation: "La pièce C complète parfaitement le damier manquant."
+                    },
+                    {
+                        id: 12,
+                        points: 4,
+                        text: "Les six moutons de Jean-Pierre mangent au total 14 kg de foin chaque jour. Le petit mouton mange le double d'un mouton adulte. Quelle quantité de foin mange chaque jour le petit mouton ?",
+                        image: "exercises/2025/q12.png",
+                        options: [
+                            { letter: "A", text: "2 kg" },
+                            { letter: "B", text: "3 kg" },
+                            { letter: "C", text: "4 kg" },
+                            { letter: "D", text: "5 kg" },
+                            { letter: "E", text: "6 kg" }
+                        ],
+                        correct: "C",
+                        explanation: "Si un adulte mange x kg, le petit mange 2x kg. Avec 5 adultes et 1 petit: 5x + 2x = 14, donc 7x = 14, x = 2. Le petit mange 2×2 = 4 kg."
+                    },
+                    {
+                        id: 13,
+                        points: 4,
+                        text: "Voici 3 tiges. Un des petits moulins dessinés ci-dessous a été fabriqué avec ces 3 tiges. Lequel ?",
+                        image: "exercises/2025/q13.png",
+                        options: [
+                            { letter: "A", text: "Moulin A" },
+                            { letter: "B", text: "Moulin B" },
+                            { letter: "C", text: "Moulin C" },
+                            { letter: "D", text: "Moulin D" },
+                            { letter: "E", text: "Moulin E" }
+                        ],
+                        correct: "B",
+                        explanation: "Seul le moulin B peut être construit avec les 3 tiges données."
+                    },
+                    {
+                        id: 14,
+                        points: 4,
+                        text: "Issa a commencé à remplir trois enclos avec des kangourous. Il reste 15 kangourous à faire rentrer dans les enclos. À la fin, il doit y avoir le même nombre de kangourous dans chaque enclos. Combien de kangourous Issa doit-il rajouter dans l'enclos 1 ?",
+                        image: "exercises/2025/q14.png",
+                        options: [
+                            { letter: "A", text: "5" },
+                            { letter: "B", text: "6" },
+                            { letter: "C", text: "7" },
+                            { letter: "D", text: "8" },
+                            { letter: "E", text: "9" }
+                        ],
+                        correct: "C",
+                        explanation: "En analysant la répartition actuelle et les 15 kangourous restants, il faut ajouter 7 kangourous à l'enclos 1."
+                    },
+                    {
+                        id: 15,
+                        points: 4,
+                        text: "Inès place dans les cercles les nombres 1, 2, 3, 4, 5, 6 et 7, de telle sorte que chaque cercle du bas contienne la somme des deux nombres juste au-dessus. Quel nombre doit-elle mettre dans le cercle grisé ?",
+                        image: "exercises/2025/q15.png",
+                        options: [
+                            { letter: "A", text: "2" },
+                            { letter: "B", text: "3" },
+                            { letter: "C", text: "4" },
+                            { letter: "D", text: "5" },
+                            { letter: "E", text: "7" }
+                        ],
+                        correct: "A",
+                        explanation: "En respectant la règle de la somme, le nombre dans le cercle grisé est 2."
+                    },
+                    {
+                        id: 16,
+                        points: 4,
+                        text: "Rose doit former un carré. En plus des trois pièces données, elle va utiliser l'une des pièces ci-dessous. Laquelle ?",
+                        image: "exercises/2025/q16.png",
+                        options: [
+                            { letter: "A", text: "Pièce A" },
+                            { letter: "B", text: "Pièce B" },
+                            { letter: "C", text: "Pièce C" },
+                            { letter: "D", text: "Pièce D" },
+                            { letter: "E", text: "Pièce E" }
+                        ],
+                        correct: "D",
+                        explanation: "La pièce D permet de compléter le carré avec les trois autres pièces."
+                    },
+                    {
+                        id: 17,
+                        points: 5,
+                        text: "Léon a tracé le symétrique du nombre 2025 par rapport à la droite noire. Mais une partie est cachée. Quelle est la somme de 2025 et du nombre que Léon a obtenu par symétrie?",
+                        image: "exercises/2025/q17.png",
+                        options: [
+                            { letter: "A", text: "4530" },
+                            { letter: "B", text: "4027" },
+                            { letter: "C", text: "4080" },
+                            { letter: "D", text: "4527" },
+                            { letter: "E", text: "4050" }
+                        ],
+                        correct: "E",
+                        explanation: "Le symétrique de 2025 est 5202, donc 2025 + 2025 = 4050 (symétrie des chiffres)."
+                    },
+                    {
+                        id: 18,
+                        points: 5,
+                        text: "Lucas a 6 coccinelles, toutes différentes. Il a fait 4 photos. Sur chaque photo on voit 3 coccinelles. Chaque coccinelle se trouve sur deux des photos. Mais la quatrième photo est ratée. Combien de points au total verrait-on sur la quatrième photo si elle était réussie ?",
+                        image: "exercises/2025/q18.png",
+                        options: [
+                            { letter: "A", text: "9" },
+                            { letter: "B", text: "10" },
+                            { letter: "C", text: "11" },
+                            { letter: "D", text: "12" },
+                            { letter: "E", text: "13" }
+                        ],
+                        correct: "D",
+                        explanation: "En comptant les points sur les 3 premières photos et en déduisant les coccinelles manquantes, on obtient 12 points."
+                    },
+                    {
+                        id: 19,
+                        points: 5,
+                        text: "Si le mois débute un dimanche, quelle sera la date du troisième lundi du mois ?",
+                        image: "exercises/2025/q19.png",
+                        options: [
+                            { letter: "A", text: "lundi 16" },
+                            { letter: "B", text: "lundi 17" },
+                            { letter: "C", text: "lundi 20" },
+                            { letter: "D", text: "lundi 21" },
+                            { letter: "E", text: "lundi 22" }
+                        ],
+                        correct: "A",
+                        explanation: "Si le mois commence un dimanche: 1er lundi = 2, 2e lundi = 9, 3e lundi = 16."
+                    },
+                    {
+                        id: 20,
+                        points: 5,
+                        text: "Lola a fait une addition mais une tache d'encre a caché certains chiffres. Elle se souvient de trois choses : tous les nombres étaient plus grands que 10 ; un des nombres était le double d'un autre ; il y avait deux nombres égaux. Quel était le nombre en haut de son addition ?",
+                        image: "exercises/2025/q20.png",
+                        options: [
+                            { letter: "A", text: "13" },
+                            { letter: "B", text: "23" },
+                            { letter: "C", text: "43" },
+                            { letter: "D", text: "53" },
+                            { letter: "E", text: "63" }
+                        ],
+                        correct: "B",
+                        explanation: "En respectant les contraintes (tous > 10, un double d'un autre, deux égaux), le nombre est 23."
+                    },
+                    {
+                        id: 21,
+                        points: 5,
+                        text: "Toutes les pièces du jeu de Tom sont identiques. Il a bâti la construction ci-contre que l'on voit de face. Chaque pièce a une épaisseur de 1 cm. Quelles sont, en cm, la largeur et la longueur d'une pièce de ce jeu ?",
+                        image: "exercises/2025/q21.png",
+                        options: [
+                            { letter: "A", text: "4 et 10" },
+                            { letter: "B", text: "3 et 12" },
+                            { letter: "C", text: "2 et 14" },
+                            { letter: "D", text: "4 et 16" },
+                            { letter: "E", text: "3 et 14" }
+                        ],
+                        correct: "B",
+                        explanation: "En analysant les dimensions de la construction (18 cm et 35 cm) et le nombre de pièces, on trouve 3 cm et 12 cm."
+                    },
+                    {
+                        id: 22,
+                        points: 5,
+                        text: "Dans 5 tubes identiques, on a mis des billes identiques puis rajouté de l'eau. La hauteur d'eau est la même dans chacun des trois premiers tubes. Dans les deux derniers, la hauteur d'eau est le double de celle des trois premiers. Quel tube contient le moins d'eau?",
+                        image: "exercises/2025/q22.png",
+                        options: [
+                            { letter: "A", text: "le A" },
+                            { letter: "B", text: "le B" },
+                            { letter: "C", text: "le C" },
+                            { letter: "D", text: "le D" },
+                            { letter: "E", text: "le E" }
+                        ],
+                        correct: "C",
+                        explanation: "Le tube C contient plus de billes, donc moins d'eau pour la même hauteur."
+                    },
+                    {
+                        id: 23,
+                        points: 5,
+                        text: "Les deux balances ci-contre sont en déséquilibre. Les objets de même forme ont la même masse. Les masses des objets, en kg, sont des nombres entiers inférieurs à 6. Quelle est la masse d'une étoile?",
+                        image: "exercises/2025/q23.png",
+                        options: [
+                            { letter: "A", text: "1kg" },
+                            { letter: "B", text: "2kg" },
+                            { letter: "C", text: "3kg" },
+                            { letter: "D", text: "4kg" },
+                            { letter: "E", text: "5kg" }
+                        ],
+                        correct: "D",
+                        explanation: "En résolvant le système d'équations des deux balances, la masse de l'étoile est 4 kg."
+                    },
+                    {
+                        id: 24,
+                        points: 5,
+                        text: "Nina a bâti une pyramide avec 30 cubes noirs ou gris. Dans sa pyramide, deux cubes ayant une face en commun ne sont pas de la même couleur. Le dessin montre l'emplacement d'un des cubes gris de Nina. Que voit-on en se plaçant au-dessus de la pyramide de Nina ?",
+                        image: "exercises/2025/q24.png",
+                        options: [
+                            { letter: "A", text: "Vue A" },
+                            { letter: "B", text: "Vue B" },
+                            { letter: "C", text: "Vue C" },
+                            { letter: "D", text: "Vue D" },
+                            { letter: "E", text: "Vue E" }
+                        ],
+                        correct: "B",
+                        explanation: "En respectant l'alternance des couleurs, la vue de dessus correspond à l'option B."
+                    }
+                ]
+            }
+        };
+
+        const optionLetters = ["A", "B", "C", "D", "E"];
+        const getPoints = (id) => (id <= 8 ? 3 : id <= 16 ? 4 : 5);
+        const buildImageOnlyDataset = (year) => ({
+            title: `Sujet E ${year} (CE2-CM1-CM2)`,
+            duration: 50,
+            questions: Array.from({ length: 24 }, (_, index) => {
+                const id = index + 1;
+                return {
+                    id,
+                    points: getPoints(id),
+                    text: `Exercice ${id} (voir image)`,
+                    image: `exercises/${year}/q${id.toString().padStart(2, "0")}.png`,
+                    options: optionLetters.map((letter) => ({ letter, text: `Réponse ${letter}` })),
+                    correct: null,
+                    explanation: "Correction non intégrée pour cette année."
+                };
+            })
+        });
+
+        Array.from({ length: 21 }, (_, index) => String(2024 - index)).forEach((year) => {
+            questionsData[`E${year}`] = buildImageOnlyDataset(year);
+        });
+
+        const answerKeys = {
+            "2004": "EBABEBCBDDCBCCEEBECAAEAC",
+            "2005": "ECCABBCECCDCBBDDACCEADCD",
+            "2006": "DEDACEBBCBDAEBDCEDDEBCEB",
+            "2007": "CCCACEBCCCCCAABAEBBCABDE",
+            "2008": "DDCDCBAAEBCBEDDDCCADEEDB",
+            "2009": "DBEDBBDEDADBDBBEBBADBDAE",
+            "2010": "EEAEABCDCBBCADCBEACEDDDB",
+            "2011": "BDBBDCEEEADBABDCDBCEDAEC",
+            "2012": "BDBDCCADCEBDBCBDCEBDCDCE",
+            "2013": "ADDECDBEBDDBEADBBDCBDCDC",
+            "2014": "BAECAEDCECDBDBCBDBECDADD",
+            "2015": "DCEEEABDBCBACEBCCDDCCBDC",
+            "2016": "DECDEAABBEDBBCCEDADBCBCD",
+            "2017": "AEBEBCAECABEEBCDDDCDBDCB",
+            "2018": "BDBDBECBDCBECDEACDAACDAB",
+            "2019": "EDCCCBAACDEDDCBCBCDCEABD",
+            "2020": "EBAECAECBDCDCBBDBADBCDDD",
+            "2021": "CCBBECCDDDEEACEDBDBDDADA",
+            "2022": "EDDCCEDDCCABCDAEBDEEBBAD",
+            "2023": "DBCCAAEECCECBBADABBBDCDE",
+            "2024": "DDECDCECBABEAADBDAECDDCE",
+            "2025": "DDBDCEEEDCCCEBCEADAABCCD"
+        };
+
+        Object.entries(answerKeys).forEach(([year, key]) => {
+            const level = `E${year}`;
+            const dataset = questionsData[level];
+            if (!dataset || !dataset.questions || key.length < 24) return;
+
+            key.slice(0, 24).split("").forEach((letter, index) => {
+                const question = dataset.questions[index];
+                if (!question) return;
+                question.correct = letter;
+                if (!question.explanation || question.explanation.includes("Correction non intégrée")) {
+                    question.explanation = `Réponse officielle ${year} : ${letter}.`;
+                }
+            });
+        });
+
+        const getSessionXp = (entry) => {
+            const correct = entry?.correct || 0;
+            const incorrect = entry?.incorrect || 0;
+            const answered = correct + incorrect;
+            const totalQuestions = entry?.questions || 0;
+            const completionBonus = answered === totalQuestions ? 20 : 0;
+            const perfectBonus = incorrect === 0 && answered > 0 ? 30 : 0;
+            return Math.max(0, correct * 10 - incorrect * 2 + completionBonus + perfectBonus);
+        };
+
+        const getProfileGamification = (profile) => {
+            const history = Array.isArray(profile?.history) ? profile.history : [];
+            const totalXp = history.reduce((sum, h) => sum + (h?.xp ?? getSessionXp(h)), 0);
+            const xpPerLevel = 300;
+            const level = Math.floor(totalXp / xpPerLevel) + 1;
+            const xpIntoLevel = totalXp % xpPerLevel;
+            const xpToNext = xpPerLevel - xpIntoLevel;
+
+            const dayKeys = [...new Set(history.map((h) => (h?.date || '').slice(0, 10)).filter(Boolean))].sort().reverse();
+            let streakDays = 0;
+            let cursor = new Date();
+            cursor.setHours(0, 0, 0, 0);
+            for (const key of dayKeys) {
+                const d = new Date(`${key}T00:00:00`);
+                if (Math.round((cursor - d) / (24 * 60 * 60 * 1000)) === 0) {
+                    streakDays++;
+                    cursor = new Date(cursor.getTime() - 24 * 60 * 60 * 1000);
+                } else {
+                    break;
+                }
+            }
+
+            const totalCorrect = history.reduce((sum, h) => sum + (h?.correct || 0), 0);
+            const perfectRuns = history.filter((h) => (h?.incorrect || 0) === 0 && (h?.correct || 0) > 0).length;
+            const badges = [];
+            if (history.length >= 1) badges.push("Premier Pas");
+            if (history.length >= 10) badges.push("Régulier");
+            if (totalCorrect >= 100) badges.push("Centurion");
+            if (perfectRuns >= 3) badges.push("Sans Faute");
+            if (streakDays >= 3) badges.push("Série 3J");
+            if (level >= 5) badges.push("Niveau 5");
+
+            return { totalXp, level, xpIntoLevel, xpToNext, xpPerLevel, streakDays, badges };
+        };
+
+        function KangourouApp() {
+            const REVIEW_STEPS_DAYS = [1, 3, 7];
+            const STORAGE_KEY = 'kangourou_app_state_v1';
+            const defaultProfiles = { p1: { name: 'Enfant 1', history: [], reviewItems: {} } };
+            const [gameState, setGameState] = useState('welcome'); // welcome, playing, results
+            const [selectedLevel, setSelectedLevel] = useState('E2025');
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [showExplanation, setShowExplanation] = useState(false);
+            const [timeLeft, setTimeLeft] = useState(null);
+            const [timerActive, setTimerActive] = useState(false);
+            const [sessionLength, setSessionLength] = useState(24);
+            const [sessionMode, setSessionMode] = useState('standard'); // standard | review
+            const [activeQuestionIndices, setActiveQuestionIndices] = useState(null);
+            const [hasSavedSession, setHasSavedSession] = useState(false);
+            const [profiles, setProfiles] = useState(defaultProfiles);
+            const [currentProfileId, setCurrentProfileId] = useState('p1');
+            const [profileNameInput, setProfileNameInput] = useState('Enfant 1');
+            const [resultSaved, setResultSaved] = useState(false);
+            const availableLevels = Object.keys(questionsData).sort((a, b) => b.localeCompare(a));
+
+            const allQuestions = questionsData[selectedLevel].questions;
+            const maxQuestions = allQuestions.length;
+            const effectiveQuestionCount = Math.min(sessionLength, maxQuestions);
+            const profileEntries = Object.entries(profiles);
+            const currentProfile = profiles[currentProfileId] || profileEntries[0]?.[1] || defaultProfiles.p1;
+            const reviewItems = currentProfile?.reviewItems || {};
+            const nowTs = Date.now();
+            const dueReviewItems = useMemo(
+                () =>
+                    Object.values(reviewItems)
+                        .filter((item) => item && typeof item.dueAt === 'number' && item.dueAt <= nowTs)
+                        .sort((a, b) => a.dueAt - b.dueAt),
+                [reviewItems, nowTs]
+            );
+            const dueForSelectedLevel = dueReviewItems.filter((item) => item.level === selectedLevel);
+
+            const effectiveIndices = useMemo(() => {
+                if (Array.isArray(activeQuestionIndices) && activeQuestionIndices.length > 0) {
+                    return activeQuestionIndices.filter(
+                        (index) => Number.isInteger(index) && index >= 0 && index < allQuestions.length
+                    );
+                }
+                return allQuestions.slice(0, effectiveQuestionCount).map((_, index) => index);
+            }, [activeQuestionIndices, allQuestions, effectiveQuestionCount]);
+
+            const questionMeta = useMemo(
+                () => effectiveIndices.map((index) => ({ index, question: allQuestions[index] })).filter((x) => Boolean(x.question)),
+                [effectiveIndices, allQuestions]
+            );
+            const questions = questionMeta.map((item) => item.question);
+            const baseDuration = questionsData[selectedLevel].duration;
+
+            const profileStats = useMemo(() => {
+                const history = currentProfile?.history || [];
+                const sessions = history.length;
+                const totalCorrect = history.reduce((sum, h) => sum + (h.correct || 0), 0);
+                const totalIncorrect = history.reduce((sum, h) => sum + (h.incorrect || 0), 0);
+                const scoreEntries = history.filter((h) => (h.maxScore || 0) > 0);
+                const avgPercent = scoreEntries.length
+                    ? scoreEntries.reduce((sum, h) => sum + ((h.score / h.maxScore) * 100), 0) / scoreEntries.length
+                    : null;
+                const reviewCount = Object.keys(currentProfile?.reviewItems || {}).length;
+                const dueCount = dueReviewItems.length;
+                const todayKey = new Date().toISOString().slice(0, 10);
+                const todayAnswered = history
+                    .filter((h) => (h?.date || '').slice(0, 10) === todayKey)
+                    .reduce((sum, h) => sum + (h.correct || 0) + (h.incorrect || 0), 0);
+                return { sessions, totalCorrect, totalIncorrect, avgPercent, history, reviewCount, dueCount, todayAnswered };
+            }, [currentProfile, dueReviewItems.length]);
+            const gamification = useMemo(() => getProfileGamification(currentProfile), [currentProfile]);
+
+            useEffect(() => {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return;
+                    const saved = JSON.parse(raw);
+                    if (!saved || !saved.selectedLevel || !saved.sessionLength) return;
+
+                    setSelectedLevel(saved.selectedLevel);
+                    setSessionLength(saved.sessionLength);
+                    if (saved.sessionMode) {
+                        setSessionMode(saved.sessionMode);
+                    }
+                    if (Array.isArray(saved.activeQuestionIndices)) {
+                        setActiveQuestionIndices(saved.activeQuestionIndices);
+                    }
+                    if (saved.profiles && typeof saved.profiles === 'object' && Object.keys(saved.profiles).length > 0) {
+                        const upgradedProfiles = Object.fromEntries(
+                            Object.entries(saved.profiles).map(([id, profile]) => [
+                                id,
+                                {
+                                    name: profile?.name || 'Enfant',
+                                    history: Array.isArray(profile?.history) ? profile.history : [],
+                                    reviewItems: profile?.reviewItems && typeof profile.reviewItems === 'object' ? profile.reviewItems : {}
+                                }
+                            ])
+                        );
+                        setProfiles(upgradedProfiles);
+                    }
+                    if (saved.currentProfileId) {
+                        setCurrentProfileId(saved.currentProfileId);
+                    }
+                    if (typeof saved.resultSaved === 'boolean') {
+                        setResultSaved(saved.resultSaved);
+                    }
+                    const hasMeaningfulProgress =
+                        saved.gameState !== 'welcome' || Object.keys(saved.answers || {}).length > 0;
+                    setHasSavedSession(hasMeaningfulProgress);
+
+                    if (saved.gameState === 'playing' || saved.gameState === 'results') {
+                        setGameState(saved.gameState);
+                        setCurrentQuestion(saved.currentQuestion ?? 0);
+                        setAnswers(saved.answers ?? {});
+                        setShowExplanation(Boolean(saved.showExplanation));
+                        setTimeLeft(saved.timeLeft ?? null);
+                        setTimerActive(Boolean(saved.timerActive));
+                    }
+                } catch (e) {
+                    // ignore malformed local cache
+                }
+            }, []);
+
+            useEffect(() => {
+                try {
+                    const snapshot = {
+                        gameState,
+                        selectedLevel,
+                        currentQuestion,
+                        answers,
+                        showExplanation,
+                        timeLeft,
+                        timerActive,
+                        sessionLength,
+                        sessionMode,
+                        activeQuestionIndices,
+                        profiles,
+                        currentProfileId,
+                        resultSaved
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+                    const hasMeaningfulProgress =
+                        snapshot.gameState !== 'welcome' || Object.keys(snapshot.answers || {}).length > 0;
+                    setHasSavedSession(hasMeaningfulProgress);
+                } catch (e) {
+                    // localStorage may be unavailable
+                }
+            }, [
+                gameState,
+                selectedLevel,
+                currentQuestion,
+                answers,
+                showExplanation,
+                timeLeft,
+                timerActive,
+                sessionLength,
+                sessionMode,
+                activeQuestionIndices,
+                profiles,
+                currentProfileId,
+                resultSaved
+            ]);
+
+            useEffect(() => {
+                if (currentProfile?.name) {
+                    setProfileNameInput(currentProfile.name);
+                }
+            }, [currentProfileId, currentProfile?.name]);
+
+            useEffect(() => {
+                if (currentQuestion >= questions.length) {
+                    setCurrentQuestion(0);
+                    setShowExplanation(false);
+                }
+            }, [questions.length]);
+
+            useEffect(() => {
+                if (timerActive && timeLeft > 0) {
+                    const timer = setTimeout(() => {
+                        setTimeLeft(timeLeft - 1);
+                    }, 1000);
+                    return () => clearTimeout(timer);
+                } else if (timeLeft === 0) {
+                    handleFinish();
+                }
+            }, [timeLeft, timerActive]);
+
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            const formatShortDate = (isoDate) => {
+                try {
+                    return new Date(isoDate).toLocaleDateString('fr-FR');
+                } catch (e) {
+                    return '-';
+                }
+            };
+
+            const startQuiz = () => {
+                let plannedIndices = allQuestions.slice(0, effectiveQuestionCount).map((_, index) => index);
+                if (sessionMode === 'review') {
+                    plannedIndices = dueForSelectedLevel
+                        .map((item) => item.questionIndex)
+                        .filter((index, position, arr) => arr.indexOf(index) === position)
+                        .slice(0, effectiveQuestionCount);
+                    if (plannedIndices.length === 0) {
+                        plannedIndices = allQuestions.slice(0, effectiveQuestionCount).map((_, index) => index);
+                        setSessionMode('standard');
+                    }
+                }
+                const plannedDuration = Math.max(10, Math.round((baseDuration * Math.max(1, plannedIndices.length)) / maxQuestions));
+                setActiveQuestionIndices(plannedIndices);
+                setGameState('playing');
+                setCurrentQuestion(0);
+                setAnswers({});
+                setShowExplanation(false);
+                setTimeLeft(plannedDuration * 60);
+                setTimerActive(true);
+                setResultSaved(false);
+            };
+
+            const switchProfile = (profileId) => {
+                setCurrentProfileId(profileId);
+                setGameState('welcome');
+                setCurrentQuestion(0);
+                setAnswers({});
+                setShowExplanation(false);
+                setTimerActive(false);
+                setTimeLeft(null);
+                setResultSaved(false);
+                setActiveQuestionIndices(null);
+            };
+
+            const addProfile = () => {
+                const nextId = `p${Date.now()}`;
+                const nextName = `Enfant ${Object.keys(profiles).length + 1}`;
+                setProfiles((prev) => ({
+                    ...prev,
+                    [nextId]: { name: nextName, history: [], reviewItems: {} }
+                }));
+                setCurrentProfileId(nextId);
+            };
+
+            const renameCurrentProfile = () => {
+                const trimmed = profileNameInput.trim();
+                if (!trimmed) return;
+                setProfiles((prev) => ({
+                    ...prev,
+                    [currentProfileId]: {
+                        ...(prev[currentProfileId] || { history: [], reviewItems: {} }),
+                        name: trimmed
+                    }
+                }));
+            };
+
+            const clearSavedProgress = () => {
+                try {
+                    localStorage.removeItem(STORAGE_KEY);
+                } catch (e) {
+                    // ignore
+                }
+                setHasSavedSession(false);
+                setGameState('welcome');
+                setCurrentQuestion(0);
+                setAnswers({});
+                setShowExplanation(false);
+                setTimerActive(false);
+                setTimeLeft(null);
+                setResultSaved(false);
+                setSessionMode('standard');
+                setActiveQuestionIndices(null);
+                setProfiles(defaultProfiles);
+                setCurrentProfileId('p1');
+                setProfileNameInput('Enfant 1');
+            };
+
+            const handleQuitToWelcome = () => {
+                setTimerActive(false);
+                setGameState('welcome');
+            };
+
+            const handleAnswer = (letter) => {
+                setAnswers((prev) => ({
+                    ...prev,
+                    [currentQuestion]: letter
+                }));
+            };
+
+            const handleNext = () => {
+                if (showExplanation) {
+                    setShowExplanation(false);
+                    if (currentQuestion < questions.length - 1) {
+                        setCurrentQuestion(currentQuestion + 1);
+                    } else {
+                        handleFinish();
+                    }
+                } else {
+                    setShowExplanation(true);
+                }
+            };
+
+            const handlePrevious = () => {
+                if (currentQuestion > 0) {
+                    setCurrentQuestion(currentQuestion - 1);
+                    setShowExplanation(false);
+                }
+            };
+
+            const handleSkip = () => {
+                if (currentQuestion < questions.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                    setShowExplanation(false);
+                }
+            };
+
+            const handleFinish = () => {
+                if (!resultSaved && gameState === 'playing') {
+                    const { score, correct, incorrect, skipped, maxScore } = calculateScore();
+                    const now = Date.now();
+                    const entry = {
+                        date: new Date().toISOString(),
+                        level: selectedLevel,
+                        questions: questions.length,
+                        mode: sessionMode,
+                        score: Number(score.toFixed(1)),
+                        maxScore,
+                        correct,
+                        incorrect,
+                        skipped,
+                        xp: getSessionXp({ questions: questions.length, correct, incorrect })
+                    };
+                    setProfiles((prev) => ({
+                        ...prev,
+                        [currentProfileId]: {
+                            ...(prev[currentProfileId] || { name: currentProfile?.name || 'Enfant', history: [], reviewItems: {} }),
+                            history: [entry, ...((prev[currentProfileId]?.history || []))].slice(0, 100),
+                            reviewItems: (() => {
+                                const nextReviewItems = { ...(prev[currentProfileId]?.reviewItems || {}) };
+
+                                questions.forEach((q, displayIndex) => {
+                                    if (!q?.correct) return;
+                                    const userAnswer = answers[displayIndex];
+                                    if (!userAnswer) return;
+
+                                    const originalIndex = questionMeta[displayIndex]?.index ?? displayIndex;
+                                    const reviewKey = `${selectedLevel}:${originalIndex}`;
+                                    const existing = nextReviewItems[reviewKey];
+
+                                    if (userAnswer !== q.correct) {
+                                        nextReviewItems[reviewKey] = {
+                                            level: selectedLevel,
+                                            questionIndex: originalIndex,
+                                            stage: 0,
+                                            dueAt: now + REVIEW_STEPS_DAYS[0] * 24 * 60 * 60 * 1000,
+                                            updatedAt: now
+                                        };
+                                    } else if (existing) {
+                                        const nextStage = (existing.stage ?? 0) + 1;
+                                        if (nextStage >= REVIEW_STEPS_DAYS.length) {
+                                            delete nextReviewItems[reviewKey];
+                                        } else {
+                                            nextReviewItems[reviewKey] = {
+                                                ...existing,
+                                                stage: nextStage,
+                                                dueAt: now + REVIEW_STEPS_DAYS[nextStage] * 24 * 60 * 60 * 1000,
+                                                updatedAt: now
+                                            };
+                                        }
+                                    }
+                                });
+
+                                return nextReviewItems;
+                            })()
+                        }
+                    }));
+                    setResultSaved(true);
+                }
+                setTimerActive(false);
+                setGameState('results');
+            };
+
+            const calculateScore = () => {
+                let score = 0;
+                let correct = 0;
+                let incorrect = 0;
+                let skipped = 0;
+                let notCorrected = 0;
+                let maxScore = 0;
+
+                questions.forEach((q, index) => {
+                    if (!q.correct) {
+                        notCorrected++;
+                        return;
+                    }
+                    maxScore += q.points;
+                    const userAnswer = answers[index];
+                    if (!userAnswer) {
+                        skipped++;
+                    } else if (userAnswer === q.correct) {
+                        score += q.points;
+                        correct++;
+                    } else {
+                        score -= q.points * 0.25;
+                        incorrect++;
+                    }
+                });
+
+                return { score: Math.max(0, score), correct, incorrect, skipped, notCorrected, maxScore };
+            };
+
+            const jumpToQuestion = (index) => {
+                setCurrentQuestion(index);
+                setShowExplanation(false);
+            };
+
+            if (gameState === 'welcome') {
+                return (
+                    <div className="app-container">
+                        <div className="header">
+                            <h1>🦘 Kangourou des Mathématiques</h1>
+                            <p>Entraînement au jeu-concours</p>
+                        </div>
+                        
+                        <div className="welcome">
+                            <div className="welcome-layout">
+                                <div className="year-selector">
+                                    <h3>Choisir une année (Sujet E)</h3>
+                                    <div className="year-buttons">
+                                        {availableLevels.map((level) => (
+                                            <button
+                                                key={level}
+                                                className={`year-btn ${selectedLevel === level ? 'active' : ''}`}
+                                                onClick={() => setSelectedLevel(level)}
+                                            >
+                                                {questionsData[level].title}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="welcome-main">
+                                    <h2 className="welcome-title">Bienvenue dans l'application d'entraînement !</h2>
+                                    <p className="welcome-intro">
+                                        Prépare-toi au concours Kangourou avec des questions authentiques 
+                                        des années précédentes. Cette application reproduit fidèlement 
+                                        les conditions du concours.
+                                    </p>
+
+                                    <div className="welcome-controls">
+                                        <div className="control-card">
+                                            <div className="control-title">Profil enfant</div>
+                                            <div className="chip-row">
+                                                {profileEntries.map(([id, profile]) => (
+                                                    <button
+                                                        key={id}
+                                                        className={`chip-btn ${currentProfileId === id ? 'active' : ''}`}
+                                                        onClick={() => switchProfile(id)}
+                                                    >
+                                                        {profile.name}
+                                                    </button>
+                                                ))}
+                                                <button className="chip-btn" onClick={addProfile}>+ Ajouter</button>
+                                            </div>
+                                            <input
+                                                className="profile-name-input"
+                                                value={profileNameInput}
+                                                onChange={(e) => setProfileNameInput(e.target.value)}
+                                                placeholder="Nom du profil"
+                                            />
+                                            <button className="tiny-btn" onClick={renameCurrentProfile}>Renommer</button>
+                                        </div>
+
+                                        <div className="control-card">
+                                            <div className="control-title">Format de session</div>
+                                            <div className="chip-row">
+                                                <button
+                                                    className={`chip-btn ${sessionLength === 10 ? 'active' : ''}`}
+                                                    onClick={() => setSessionLength(10)}
+                                                >
+                                                    Session rapide (10)
+                                                </button>
+                                                <button
+                                                    className={`chip-btn ${sessionLength === 24 ? 'active' : ''}`}
+                                                    onClick={() => setSessionLength(24)}
+                                                >
+                                                    Session complète (24)
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="control-card">
+                                            <div className="control-title">Révision intelligente</div>
+                                            <div className="chip-row">
+                                                <button
+                                                    className={`chip-btn ${sessionMode === 'standard' ? 'active' : ''}`}
+                                                    onClick={() => setSessionMode('standard')}
+                                                >
+                                                    Session normale
+                                                </button>
+                                                <button
+                                                    className={`chip-btn ${sessionMode === 'review' ? 'active' : ''}`}
+                                                    onClick={() => setSessionMode('review')}
+                                                >
+                                                    Session révision
+                                                </button>
+                                            </div>
+                                            <div className="history-list">
+                                                Planning: erreurs revues en J+1, puis J+3, puis J+7.
+                                            </div>
+                                            <div className="history-list">
+                                                Échéances dues: <strong>{dueForSelectedLevel.length}</strong> sur cette année,{' '}
+                                                <strong>{profileStats.dueCount}</strong> au total.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="profile-stats">
+                                        <div className="control-title">Statistiques de {currentProfile.name}</div>
+                                        <div className="chip-row">
+                                            <span>Sessions: <strong>{profileStats.sessions}</strong></span>
+                                            <span>Bonnes réponses: <strong>{profileStats.totalCorrect}</strong></span>
+                                            <span>Erreurs: <strong>{profileStats.totalIncorrect}</strong></span>
+                                            <span>Cartes révision: <strong>{profileStats.reviewCount}</strong></span>
+                                            <span>Niveau: <strong>{gamification.level}</strong></span>
+                                            <span>XP: <strong>{gamification.totalXp}</strong></span>
+                                            <span>
+                                                Score moyen:
+                                                <strong>
+                                                    {profileStats.avgPercent === null ? ' - ' : ` ${profileStats.avgPercent.toFixed(1)}%`}
+                                                </strong>
+                                            </span>
+                                        </div>
+                                        <div className="history-list">
+                                            {(profileStats.history || []).slice(0, 5).map((h, idx) => (
+                                                <div key={idx}>
+                                                    {formatShortDate(h.date)} - {h.level} - {h.questions} q - {h.mode === 'review' ? 'Révision' : 'Normal'} - {h.score}/{h.maxScore || 0} pts
+                                                </div>
+                                            ))}
+                                            {profileStats.history.length === 0 && (
+                                                <div>Aucune session enregistrée pour ce profil.</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {hasSavedSession && (
+                                        <div className="welcome-actions">
+                                            <button
+                                                className="resume-btn"
+                                                onClick={() => {
+                                                    setGameState('playing');
+                                                    if (timeLeft > 0) setTimerActive(true);
+                                                }}
+                                            >
+                                                ▶ Reprendre la dernière session
+                                            </button>
+                                            <button className="reset-btn" onClick={clearSavedProgress}>
+                                                Effacer la progression
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="profile-hero">
+                                        <div style={{display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center'}}>
+                                            <div>
+                                                <div style={{fontSize: '1.1em', fontWeight: 800}}>{currentProfile.name}</div>
+                                                <div style={{opacity: 0.9}}>Niveau {gamification.level} • Série {gamification.streakDays} jour(s)</div>
+                                            </div>
+                                            <div className="mini-pill">XP total {gamification.totalXp}</div>
+                                        </div>
+                                        <div style={{marginTop: '10px'}}>Progression niveau: {gamification.xpIntoLevel}/{gamification.xpPerLevel}</div>
+                                        <div className="xp-track">
+                                            <div className="xp-fill" style={{width: `${(gamification.xpIntoLevel / gamification.xpPerLevel) * 100}%`}} />
+                                        </div>
+                                        <div className="history-list" style={{color: '#e2e8f0'}}>
+                                            Mission du jour: répondre à 10 questions ({Math.min(profileStats.todayAnswered, 10)}/10)
+                                        </div>
+                                        <div className="badge-list">
+                                            {(gamification.badges.length ? gamification.badges : ['Aucun badge pour le moment']).map((b, idx) => (
+                                                <span key={idx} className="badge-chip">{b}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="rules">
+                                        <h3>📋 Règles du jeu-concours</h3>
+                                        <ul>
+                                            <li><strong>Durée :</strong> 50 minutes chrono</li>
+                                            <li><strong>24 questions</strong> à choix multiples (A, B, C, D, E)</li>
+                                            <li><strong>Questions 1-8 :</strong> 3 points chacune</li>
+                                            <li><strong>Questions 9-16 :</strong> 4 points chacune</li>
+                                            <li><strong>Questions 17-24 :</strong> 5 points chacune</li>
+                                            <li><strong>Bonne réponse :</strong> tu gagnes les points</li>
+                                            <li><strong>Mauvaise réponse :</strong> tu perds 1/4 des points</li>
+                                            <li><strong>Pas de réponse :</strong> ton score ne change pas</li>
+                                        </ul>
+                                    </div>
+
+                                    <button className="start-btn" onClick={startQuiz}>
+                                        🚀 Commencer l'entraînement
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'results') {
+                const { score, correct, incorrect, skipped, notCorrected, maxScore } = calculateScore();
+                const hasCorrections = maxScore > 0;
+                const latestEntry = (currentProfile?.history || [])[0];
+                const earnedXp = latestEntry?.xp ?? getSessionXp({ questions: questions.length, correct, incorrect });
+
+                return (
+                    <div className="app-container">
+                        <div className="header">
+                            <h1>🦘 Kangourou des Mathématiques</h1>
+                            <p>Résultats de {currentProfile.name}</p>
+                        </div>
+
+                        <div className="results">
+                            <h2>🎉 Bravo pour avoir terminé !</h2>
+
+                            <div className="reward-card">
+                                <div style={{fontSize: '1.15em', fontWeight: 800}}>Récompenses</div>
+                                <div style={{marginTop: '6px'}}>
+                                    +{earnedXp} XP gagnés • Niveau {gamification.level} • {gamification.xpToNext} XP avant le niveau suivant
+                                </div>
+                                <div className="badge-list" style={{marginTop: '8px'}}>
+                                    {(gamification.badges.length ? gamification.badges : ['Continue pour débloquer un badge']).map((b, idx) => (
+                                        <span key={idx} className="badge-chip" style={{background: '#fff', color: '#2d3748', borderColor: '#f0c95b'}}>{b}</span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {hasCorrections ? (
+                                <div className="score-display">
+                                    <div className="score">{score.toFixed(1)} points</div>
+                                    <div className="max-score">sur {maxScore} points possibles</div>
+                                </div>
+                            ) : (
+                                <div className="score-display">
+                                    <div className="score">Mode entraînement</div>
+                                    <div className="max-score">Sans correction automatique pour cette année</div>
+                                </div>
+                            )}
+
+                            <div className="stats">
+                                <div className="stat-card">
+                                    <div className="value">✓ {correct}</div>
+                                    <div className="label">Réponses correctes</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="value">✗ {incorrect}</div>
+                                    <div className="label">Réponses incorrectes</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="value">− {skipped}</div>
+                                    <div className="label">Questions sautées</div>
+                                </div>
+                                {notCorrected > 0 && (
+                                    <div className="stat-card">
+                                        <div className="value">? {notCorrected}</div>
+                                        <div className="label">Sans corrigé intégré</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button className="start-btn" onClick={() => setGameState('welcome')}>
+                                🔄 Recommencer
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Playing state
+            const question = questions[currentQuestion];
+            const userAnswer = answers[currentQuestion];
+            const isAnswered = userAnswer !== undefined;
+            const hasCorrection = Boolean(question.correct);
+
+            return (
+                <div className="app-container">
+                    <div className="header">
+                        <h1>🦘 Kangourou des Mathématiques</h1>
+                        <p>{questionsData[selectedLevel].title} - {currentProfile.name}</p>
+                    </div>
+
+                    <div className="timer-bar">
+                        <div className={`timer ${timeLeft < 300 ? 'warning' : ''}`}>
+                            ⏱️ {formatTime(timeLeft)}
+                        </div>
+                        <div className="progress-info">
+                            Question {currentQuestion + 1} / {questions.length}
+                        </div>
+                    </div>
+
+                    <div className="game-strip">
+                        <div>
+                            <div className="mini-pill">Niveau {gamification.level}</div>
+                        </div>
+                        <div>
+                            <div>XP: {gamification.xpIntoLevel}/{gamification.xpPerLevel}</div>
+                            <div className="xp-track">
+                                <div className="xp-fill" style={{width: `${(gamification.xpIntoLevel / gamification.xpPerLevel) * 100}%`}} />
+                            </div>
+                        </div>
+                        <div style={{textAlign: 'right'}}>
+                            <div className="mini-pill">Série {gamification.streakDays}j</div>
+                        </div>
+                    </div>
+
+                    <div className="question-container">
+                        <div className="question-header">
+                            <div className="question-number">
+                                Question {question.id}
+                            </div>
+                            <div className="question-points">
+                                {question.points} points
+                            </div>
+                        </div>
+
+                        <div className="question-text">
+                            {question.text}
+                        </div>
+
+                        {question.image && (
+                            <img
+                                className="question-image"
+                                src={question.image}
+                                alt={`Illustration de l'exercice ${question.id}`}
+                            />
+                        )}
+
+                        <div className="options">
+                            {question.options.map((option) => {
+                                let className = 'option';
+                                if (userAnswer === option.letter) {
+                                    className += ' selected';
+                                }
+                                if (showExplanation) {
+                                    if (hasCorrection && option.letter === question.correct) {
+                                        className += ' correct';
+                                    } else if (hasCorrection && userAnswer === option.letter && userAnswer !== question.correct) {
+                                        className += ' incorrect';
+                                    }
+                                }
+
+                                return (
+                                    <div
+                                        key={option.letter}
+                                        className={className}
+                                        onClick={() => !showExplanation && handleAnswer(option.letter)}
+                                    >
+                                        <div className="option-letter">{option.letter}</div>
+                                        <div>{option.text || `Réponse ${option.letter}`}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {showExplanation && (
+                            <div className="explanation">
+                                {hasCorrection ? (
+                                    <>
+                                        <h4>
+                                            {userAnswer === question.correct ? '✅ Bravo !' : '❌ Pas tout à fait'}
+                                        </h4>
+                                        <p>
+                                            <strong>Bonne réponse :</strong> {question.correct}
+                                        </p>
+                                        <p>{question.explanation}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h4>ℹ️ Exercice validé</h4>
+                                        <p>Le corrigé automatique n'est pas encore intégré pour cette année.</p>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="question-grid">
+                            {questions.map((q, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`question-dot ${answers[idx] ? 'answered' : ''} ${idx === currentQuestion ? 'current' : ''}`}
+                                    onClick={() => jumpToQuestion(idx)}
+                                    title={`Question ${idx + 1}`}
+                                >
+                                    {idx + 1}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="navigation">
+                        <div style={{display: 'flex', gap: '10px'}}>
+                            <button
+                                className="nav-btn secondary"
+                                onClick={handlePrevious}
+                                disabled={currentQuestion === 0}
+                            >
+                                ← Précédent
+                            </button>
+                            <button className="nav-btn secondary" onClick={handleQuitToWelcome}>
+                                Quitter
+                            </button>
+                        </div>
+
+                        <div style={{display: 'flex', gap: '10px'}}>
+                            {!showExplanation && (
+                                <button className="skip-btn" onClick={handleSkip}>
+                                    Passer
+                                </button>
+                            )}
+                            {currentQuestion === questions.length - 1 && showExplanation ? (
+                                <button className="nav-btn primary" onClick={handleFinish}>
+                                    Voir les résultats 🏆
+                                </button>
+                            ) : (
+                                <button
+                                    className="nav-btn primary"
+                                    onClick={handleNext}
+                                    disabled={!isAnswered && !showExplanation}
+                                >
+                                    {showExplanation ? 'Suivant →' : 'Valider ✓'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<KangourouApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
