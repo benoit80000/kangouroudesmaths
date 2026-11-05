@@ -1,0 +1,17 @@
+{
+  "name": "Kangourou des Mathématiques - Entraînement",
+  "short_name": "Kangourou",
+  "description": "Entraînement au jeu-concours Kangourou des Mathématiques, sujets E (CE2, CM1, CM2).",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f8fb",
+  "theme_color": "#d9631a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -7,7 +7,7 @@ export const SUBJECT_DURATION_MIN = 50;
 // Barème officiel : 3 points (1 à 8), 4 points (9 à 16), 5 points (17 à 24).
 export const pointsFor = (id) => (id <= 8 ? 3 : id <= 16 ? 4 : 5);
 
-const BASE = import.meta.env.BASE_URL;
+const BASE = import.meta.env?.BASE_URL ?? './';
 
 function buildSubject(year) {
   return {

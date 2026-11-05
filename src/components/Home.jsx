@@ -3,6 +3,7 @@ import { LEVELS } from '../data/levels.js';
 import { bestScoresByLevel, formatDate, formatScore, formatTime, MODE_SUFFIX } from '../lib/progress.js';
 import Logo from './Logo.jsx';
 import ProfileMenu from './ProfileMenu.jsx';
+import OfflineCard from './OfflineCard.jsx';
 
 const FORMATS = [
   { id: 'exam', title: 'Concours blanc', detail: '24 questions · 50 min', help: 'Comme le jour du concours : la correction arrive à la fin.' },
@@ -169,6 +170,8 @@ export default function Home(props) {
               <p className="muted small">Aucune épreuve pour l'instant. Tes scores s'afficheront ici.</p>
             )}
           </section>
+
+          <OfflineCard />
 
           <section className="card">
             <h2>Barème</h2>

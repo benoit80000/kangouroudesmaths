@@ -145,6 +145,7 @@ p { margin: 0; }
   border: 1px solid var(--rule);
   white-space: nowrap;
 }
+.badge.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
 .badge.streak { color: var(--kangou); border-color: var(--kangou-soft); background: var(--kangou-soft); }
 
 /* ---------- Menu profil ---------- */
