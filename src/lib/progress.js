@@ -185,3 +185,92 @@ export const formatDate = (iso) => {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? '–' : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 };
+
+// ---------- Sauvegarde dans un fichier (export / import) ----------
+
+const EXPORT_APP_ID = 'kangourou-des-maths';
+
+export function buildExport(profiles) {
+  return {
+    app: EXPORT_APP_ID,
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    profiles,
+  };
+}
+
+export function exportFileName(date = new Date()) {
+  const d = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return `kangourou-progression-${d}.json`;
+}
+
+// Accepte un fichier exporté par l'appli, ou une sauvegarde brute du navigateur (ancien format).
+export function parseImport(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("Ce fichier n'est pas une sauvegarde Kangourou (format illisible).");
+  }
+  const raw = data?.profiles;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || Object.keys(raw).length === 0) {
+    throw new Error("Ce fichier ne contient aucun profil Kangourou.");
+  }
+  const profiles = {};
+  for (const [id, p] of Object.entries(raw)) {
+    if (!p || typeof p !== 'object') continue;
+    profiles[id] = {
+      name: typeof p.name === 'string' && p.name.trim() ? p.name.trim().slice(0, 24) : 'Enfant',
+      history: Array.isArray(p.history) ? p.history.filter((h) => h && typeof h === 'object' && h.date) : [],
+      reviewItems: p.reviewItems && typeof p.reviewItems === 'object' && !Array.isArray(p.reviewItems) ? p.reviewItems : {},
+    };
+  }
+  if (Object.keys(profiles).length === 0) throw new Error("Ce fichier ne contient aucun profil Kangourou.");
+  return profiles;
+}
+
+const historyKey = (h) => `${h.date}|${h.level}|${h.mode}|${h.questions}`;
+
+// Fusionne sans rien perdre : historiques réunis (sans doublons), carte de révision la plus récente gardée.
+export function mergeProfiles(current, imported) {
+  const merged = { ...current };
+  let addedSessions = 0;
+  let addedProfiles = 0;
+  for (const [id, incoming] of Object.entries(imported)) {
+    // Un profil de même identifiant, ou à défaut de même prénom, est considéré comme le même enfant.
+    const targetId =
+      (merged[id] && id) ||
+      Object.keys(merged).find((k) => merged[k].name.toLowerCase() === incoming.name.toLowerCase());
+    if (!targetId) {
+      merged[id] = incoming;
+      addedProfiles++;
+      addedSessions += incoming.history.length;
+      continue;
+    }
+    const existing = merged[targetId];
+    const seen = new Set(existing.history.map(historyKey));
+    const newEntries = incoming.history.filter((h) => !seen.has(historyKey(h)));
+    addedSessions += newEntries.length;
+    const reviewItems = { ...existing.reviewItems };
+    for (const [key, item] of Object.entries(incoming.reviewItems)) {
+      if (!reviewItems[key] || (item?.updatedAt ?? 0) > (reviewItems[key]?.updatedAt ?? 0)) reviewItems[key] = item;
+    }
+    merged[targetId] = {
+      ...existing,
+      history: [...existing.history, ...newEntries]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 100),
+      reviewItems,
+    };
+  }
+  return { profiles: merged, addedSessions, addedProfiles };
+}
+
+// Demande au navigateur de ne pas effacer les données de lui-même (ex. Safari après 7 jours sans visite).
+export async function requestPersistentStorage() {
+  try {
+    if (navigator.storage?.persist && !(await navigator.storage.persisted())) await navigator.storage.persist();
+  } catch {
+    // non pris en charge : sans conséquence
+  }
+}

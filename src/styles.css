@@ -187,6 +187,7 @@ p { margin: 0; }
   box-shadow: var(--shadow);
   padding: 14px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 .menu-list { display: grid; gap: 4px; }
@@ -205,11 +206,12 @@ p { margin: 0; }
 .menu-item:hover { background: var(--paper); }
 .menu-item.on { background: var(--paper); box-shadow: inset 3px 0 0 var(--kangou); }
 .menu-item.add { color: var(--kangou); }
-.rename { display: grid; gap: 6px; border-top: 1px solid var(--rule); padding-top: 12px; }
+.rename { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; border-top: 1px solid var(--rule); padding-top: 12px; }
 .rename-row { display: flex; gap: 8px; }
 .rename input {
   flex: 1;
   min-width: 0;
+  width: 100%;
   border: 1px solid var(--rule);
   border-radius: 10px;
   padding: 8px 10px;
@@ -217,6 +219,13 @@ p { margin: 0; }
   background: var(--paper);
   color: var(--ink);
 }
+.backup { display: grid; gap: 8px; border-top: 1px solid var(--rule); padding-top: 12px; }
+.backup-text { font-size: 0.85rem; color: var(--ink-soft); }
+.backup-row { display: flex; gap: 8px; }
+.backup-row .btn { flex: 1; min-width: 0; padding: 8px 10px; }
+.notice { font-size: 0.85rem; font-weight: 700; padding: 8px 10px; border-radius: 10px; }
+.notice.ok { background: var(--ok-soft); color: var(--ok); }
+.notice.ko { background: var(--ko-soft); color: var(--ko); }
 .menu-danger {
   border: 0;
   background: none;

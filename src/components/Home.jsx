@@ -39,6 +39,8 @@ export default function Home(props) {
             onAdd={props.onAddProfile}
             onRename={props.onRenameProfile}
             onResetAll={props.onResetAll}
+            onExport={props.onExport}
+            onImport={props.onImport}
           />
         </div>
       </header>

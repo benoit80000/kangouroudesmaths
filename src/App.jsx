@@ -11,6 +11,10 @@ import {
   getGamification,
   dueReviewItems,
   updateReviewItems,
+  buildExport,
+  exportFileName,
+  mergeProfiles,
+  requestPersistentStorage,
 } from './lib/progress.js';
 import Home from './components/Home.jsx';
 import Exam from './components/Exam.jsx';
@@ -84,6 +88,10 @@ export default function App() {
       resultSaved,
     });
   }, [gameState, selectedLevel, currentQuestion, answers, showExplanation, timeLeft, playing, sessionLength, sessionMode, activeQuestionIndices, profiles, currentProfileId, resultSaved]);
+
+  useEffect(() => {
+    requestPersistentStorage();
+  }, []);
 
   // Chronomètre : tourne uniquement pendant l'épreuve.
   useEffect(() => {
@@ -195,6 +203,24 @@ export default function App() {
     setGameState('welcome');
   };
 
+  const exportProgress = () => {
+    const blob = new Blob([JSON.stringify(buildExport(profiles), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = exportFileName();
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const importProgress = (imported) => {
+    const result = mergeProfiles(profiles, imported);
+    setProfiles(result.profiles);
+    return result;
+  };
+
   const chooseFormat = (format) => {
     if (format === 'review') setSessionMode('review');
     else {
@@ -275,6 +301,8 @@ export default function App() {
       onAddProfile={addProfile}
       onRenameProfile={renameProfile}
       onResetAll={resetAll}
+      onExport={exportProgress}
+      onImport={importProgress}
     />
   );
 }

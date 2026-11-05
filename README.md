@@ -22,6 +22,9 @@ npm run preview  # tester la version de production
 - `pdf/` : sujets et corrigés d'origine.
 
 La progression est enregistrée dans le navigateur (clé `kangourou_app_state_v1`, format compatible avec l'ancienne version).
+Depuis le menu du profil, « Enregistrer » télécharge toute la progression dans un fichier JSON et « Restaurer… »
+le réimporte (sur le même appareil ou un autre) en fusionnant sans doublon : les profils de même prénom sont réunis.
+L'appli demande aussi au navigateur un stockage persistant, pour éviter qu'il efface les données de lui-même.
 
 ## Mise en ligne
 
