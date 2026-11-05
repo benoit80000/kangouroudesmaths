@@ -25,5 +25,5 @@ La progression est enregistrée dans le navigateur (clé `kangourou_app_state_v1
 
 ## Mise en ligne
 
-Le workflow `.github/workflows/deploy.yml` construit et publie le site sur GitHub Pages à chaque push sur `main`.
-Dans *Settings → Pages*, choisir **Source : GitHub Actions**.
+Le site est déployé par Vercel à chaque push (production sur `main`, prévisualisation sur les autres branches).
+`vercel.json` fixe la configuration : `npm run build`, dossier publié `dist/`.
