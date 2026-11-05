@@ -279,9 +279,15 @@ export const formatTime = (seconds) => {
 
 export const formatScore = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, '').replace('.', ','));
 
-export const formatDate = (iso) => {
+// Date d'une épreuve : « aujourd'hui », « hier », sinon la date complète avec l'année (« 3 nov. 2026 »).
+export const formatDate = (iso, now = new Date()) => {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '–' : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  if (Number.isNaN(d.getTime())) return '–';
+  const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+  if (days === 0) return "aujourd'hui";
+  if (days === 1) return 'hier';
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 // ---------- Sauvegarde dans un fichier (export / import) ----------

@@ -153,9 +153,12 @@ export default function Home(props) {
               <ul className="hist">
                 {history.map((h, i) => (
                   <li key={i}>
-                    <span>
-                      {formatDate(h.date)} · {LEVELS[h.level]?.year ?? h.level}
-                      {h.mode === 'review' ? ' · révision' : h.questions !== 24 ? ` · ${h.questions} q.` : ''}
+                    <span className="hist-what">
+                      <span>
+                        Sujet {LEVELS[h.level]?.year ?? h.level}
+                        {h.mode === 'review' ? ' · révision' : h.questions !== 24 ? ` · ${h.questions} questions` : ''}
+                      </span>
+                      <span className="hist-date">{formatDate(h.date)}</span>
                     </span>
                     <b className="num">{h.maxScore ? `${formatScore(h.score)} / ${h.maxScore}` : '–'}</b>
                   </li>
