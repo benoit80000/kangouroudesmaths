@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { LEVELS } from '../data/levels.js';
-import { bestScoresByLevel, formatDate, formatScore, formatTime } from '../lib/progress.js';
+import { bestScoresByLevel, formatDate, formatScore, formatTime, MODE_SUFFIX } from '../lib/progress.js';
 import Logo from './Logo.jsx';
 import ProfileMenu from './ProfileMenu.jsx';
 
 const FORMATS = [
-  { id: 'full', title: 'Concours', detail: '24 questions · 50 min' },
-  { id: 'quick', title: 'Rapide', detail: '10 questions · 21 min' },
-  { id: 'review', title: 'Révision', detail: null },
+  { id: 'exam', title: 'Concours blanc', detail: '24 questions · 50 min', help: 'Comme le jour du concours : la correction arrive à la fin.' },
+  { id: 'full', title: 'Entraînement', detail: '24 questions · 50 min', help: 'La correction s\'affiche après chaque question.' },
+  { id: 'quick', title: 'Rapide', detail: '10 questions · 21 min', help: 'Les 10 premières questions, avec correction après chacune.' },
+  { id: 'review', title: 'Révision', detail: null, help: 'Les questions ratées reviennent à J+1, J+3 puis J+7.' },
 ];
 
 export default function Home(props) {
@@ -52,7 +53,7 @@ export default function Home(props) {
           {paused && (
             <section className="card resume" aria-label="Épreuve en cours">
               <div className="resume-text">
-                <span className="label">{paused.mode === 'review' ? 'Révision en cours' : 'Épreuve en cours'}</span>
+                <span className="label">{paused.mode === 'review' ? 'Révision en cours' : paused.mode === 'exam' ? 'Concours blanc en cours' : 'Épreuve en cours'}</span>
                 <h2>{paused.title} · question {paused.position} sur {paused.total}</h2>
                 <span className="muted small">
                   {formatTime(paused.timeLeft)} restantes · {paused.answered} réponse{paused.answered > 1 ? 's' : ''} donnée{paused.answered > 1 ? 's' : ''}
@@ -105,11 +106,11 @@ export default function Home(props) {
                   </button>
                 ))}
               </div>
-              {reviewEmpty && (
-                <p className="hint">
-                  Aucune erreur à revoir aujourd'hui pour {selectedYear}. Les erreurs reviennent à J+1, puis J+3, puis J+7.
-                </p>
-              )}
+              <p className="hint">
+                {reviewEmpty
+                  ? `Aucune erreur à revoir aujourd'hui pour ${selectedYear}. Les erreurs reviennent à J+1, puis J+3, puis J+7.`
+                  : FORMATS.find((f) => f.id === format)?.help}
+              </p>
             </div>
 
             <div className="start-row">
@@ -156,7 +157,7 @@ export default function Home(props) {
                     <span className="hist-what">
                       <span>
                         Sujet {LEVELS[h.level]?.year ?? h.level}
-                        {h.mode === 'review' ? ' · révision' : h.questions !== 24 ? ` · ${h.questions} questions` : ''}
+                        {h.mode !== 'standard' ? MODE_SUFFIX[h.mode] : h.questions !== 24 ? ` · ${h.questions} questions` : ''}
                       </span>
                       <span className="hist-date">{formatDate(h.date)}</span>
                     </span>

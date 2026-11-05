@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LEVELS, LEVEL_KEYS, DEFAULT_LEVEL, getLevel } from './data/levels.js';
 import {
   DEFAULT_PROFILES,
@@ -27,7 +27,7 @@ const initial = {
   gameState: saved?.gameState === 'results' && saved?.resultSaved ? 'results' : 'welcome',
   selectedLevel: Object.hasOwn(LEVELS, saved?.selectedLevel ?? '') ? saved.selectedLevel : DEFAULT_LEVEL,
   sessionLength: saved?.sessionLength === 10 ? 10 : 24,
-  sessionMode: saved?.sessionMode === 'review' ? 'review' : 'standard',
+  sessionMode: saved?.sessionMode ?? 'standard',
   activeQuestionIndices: saved?.activeQuestionIndices ?? null,
   currentQuestion: saved?.currentQuestion ?? 0,
   answers: saved?.answers ?? {},
@@ -53,6 +53,12 @@ export default function App() {
     Object.hasOwn(initial.profiles, initial.currentProfileId) ? initial.currentProfileId : Object.keys(initial.profiles)[0]
   );
   const [resultSaved, setResultSaved] = useState(initial.resultSaved);
+  // Brouillons de l'épreuve en cours (en mémoire seulement, remis à zéro à chaque épreuve).
+  const [drafts, setDrafts] = useState({});
+
+  // Toujours la version la plus récente des profils (évite d'importer deux fois sur un état périmé).
+  const profilesRef = useRef(profiles);
+  profilesRef.current = profiles;
 
   const level = getLevel(selectedLevel);
   const profile = (Object.hasOwn(profiles, currentProfileId) && profiles[currentProfileId]) || Object.values(profiles)[0];
@@ -152,6 +158,7 @@ export default function App() {
     setShowExplanation(false);
     setTimeLeft(minutes * 60);
     setResultSaved(false);
+    setDrafts({});
     setGameState('playing');
   };
 
@@ -161,6 +168,7 @@ export default function App() {
       const due = [...new Set(dueForLevel.map((item) => item.questionIndex))].sort((a, b) => a - b);
       if (due.length) return startSession({ indices: due, mode: 'review' });
     }
+    if (sessionMode === 'exam') return startSession({ indices: all, mode: 'exam' });
     return startSession({ indices: all.slice(0, sessionLength), mode: 'standard' });
   };
 
@@ -216,13 +224,15 @@ export default function App() {
   };
 
   const importProgress = (imported) => {
-    const result = mergeProfiles(profiles, imported);
+    const result = mergeProfiles(profilesRef.current, imported);
+    profilesRef.current = result.profiles;
     setProfiles(result.profiles);
     return result;
   };
 
   const chooseFormat = (format) => {
     if (format === 'review') setSessionMode('review');
+    else if (format === 'exam') setSessionMode('exam');
     else {
       setSessionMode('standard');
       setSessionLength(format === 'quick' ? 10 : 24);
@@ -239,6 +249,8 @@ export default function App() {
         answers={answers}
         showExplanation={showExplanation}
         timeLeft={timeLeft}
+        drafts={drafts}
+        setDrafts={setDrafts}
         onSelect={(letter) => setAnswers((prev) => ({ ...prev, [currentQuestion]: letter }))}
         onValidate={() => setShowExplanation(true)}
         onGoTo={(index) => {
@@ -275,7 +287,7 @@ export default function App() {
       levelKeys={LEVEL_KEYS}
       selectedLevel={selectedLevel}
       onSelectLevel={setSelectedLevel}
-      format={sessionMode === 'review' ? 'review' : sessionLength === 10 ? 'quick' : 'full'}
+      format={sessionMode === 'review' || sessionMode === 'exam' ? sessionMode : sessionLength === 10 ? 'quick' : 'full'}
       onFormat={chooseFormat}
       dueForLevel={dueForLevel.length}
       onStart={startNew}

@@ -3,6 +3,12 @@
 // pour que les profils et l'historique existants soient conservés.
 
 export const STORAGE_KEY = 'kangourou_app_state_v1';
+
+// Modes d'épreuve : entraînement (correction après chaque question), concours blanc
+// (correction à la fin), révision (questions ratées).
+export const MODES = ['standard', 'exam', 'review'];
+const sanitizeMode = (m) => (MODES.includes(m) ? m : 'standard');
+export const MODE_SUFFIX = { standard: '', exam: ' · concours blanc', review: ' · révision' };
 export const REVIEW_STEPS_DAYS = [1, 3, 7];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -46,7 +52,7 @@ function sanitizeHistoryEntry(h) {
     date: new Date(time).toISOString(),
     level: h.level,
     questions: isInt(h.questions, 0, MAX_QUESTIONS) ? h.questions : 0,
-    mode: h.mode === 'review' ? 'review' : 'standard',
+    mode: sanitizeMode(h.mode),
     score: num(h.score, 0, MAX_POINTS) ?? 0,
     maxScore: num(h.maxScore, 0, MAX_POINTS) ?? 0,
     correct: isInt(h.correct, 0, MAX_QUESTIONS) ? h.correct : 0,
@@ -118,7 +124,7 @@ export function loadSavedState() {
       gameState: saved.gameState === 'results' ? 'results' : saved.gameState === 'playing' ? 'playing' : 'welcome',
       selectedLevel: isValidLevelKey(saved.selectedLevel) ? saved.selectedLevel : null,
       sessionLength: saved.sessionLength === 10 ? 10 : 24,
-      sessionMode: saved.sessionMode === 'review' ? 'review' : 'standard',
+      sessionMode: sanitizeMode(saved.sessionMode),
       activeQuestionIndices: indices && indices.length ? indices : null,
       currentQuestion: isInt(saved.currentQuestion, 0, MAX_QUESTIONS - 1) ? saved.currentQuestion : 0,
       answers: sanitizeAnswers(saved.answers),

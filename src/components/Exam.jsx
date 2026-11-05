@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { LETTERS } from '../data/levels.js';
-import { formatTime } from '../lib/progress.js';
+import { formatTime, MODE_SUFFIX } from '../lib/progress.js';
+import Scratch from './Scratch.jsx';
 
-function Figure({ question }) {
+function Figure({ question, strokes, onStrokes, drawing }) {
   const [zoomed, setZoomed] = useState(false);
   const closeRef = useRef(null);
   const alt = question.text ? `Exercice ${question.id} : ${question.text}` : `Exercice ${question.id}, énoncé et réponses A à E`;
@@ -22,12 +23,26 @@ function Figure({ question }) {
 
   return (
     <>
-      <div className="figure-scroll">
-        <button className="figure" onClick={() => setZoomed(true)} aria-label="Agrandir la figure">
-          <img src={question.image} alt={alt} />
-        </button>
+      <div className={`figure-scroll ${drawing ? 'drawing' : ''}`}>
+        {drawing ? (
+          <div className="figure">
+            <span className="figure-inner">
+              <img src={question.image} alt={alt} draggable="false" />
+              <Scratch strokes={strokes} onChange={onStrokes} active />
+            </span>
+          </div>
+        ) : (
+          <button className="figure" onClick={() => setZoomed(true)} aria-label="Agrandir la figure">
+            <span className="figure-inner">
+              <img src={question.image} alt={alt} />
+              {strokes.length > 0 && <Scratch strokes={strokes} onChange={onStrokes} active={false} />}
+            </span>
+          </button>
+        )}
       </div>
-      <p className="figure-hint">Touche la figure pour l'agrandir</p>
+      <p className="figure-hint">
+        {drawing ? 'Dessine sur la figure pour chercher. Ton brouillon reste là quand tu changes de question.' : "Touche la figure pour l'agrandir"}
+      </p>
       {zoomed && (
         <div className="lightbox" role="dialog" aria-modal="true" aria-label={`Exercice ${question.id} agrandi`} onClick={() => setZoomed(false)}>
           <button ref={closeRef} className="btn lightbox-close" onClick={() => setZoomed(false)}>Fermer</button>
@@ -51,16 +66,21 @@ function groupByPoints(questions) {
 }
 
 export default function Exam({
-  level, mode, questions, currentQuestion, answers, showExplanation, timeLeft,
+  level, mode, questions, currentQuestion, answers, showExplanation, timeLeft, drafts, setDrafts,
   onSelect, onValidate, onGoTo, onFinish, onQuit,
 }) {
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [drawing, setDrawing] = useState(false);
+  const strokes = drafts[currentQuestion] ?? [];
+  const setStrokes = (next) => setDrafts((prev) => ({ ...prev, [currentQuestion]: next }));
   const question = questions[currentQuestion];
   const answer = answers[currentQuestion];
   const isLast = currentQuestion === questions.length - 1;
   const hasCorrection = Boolean(question.correct);
   const unanswered = questions.length - Object.keys(answers).length;
   const lowTime = timeLeft < 300;
+  // En concours blanc, aucune correction pendant l'épreuve : on répond puis on passe à la suivante.
+  const liveCorrection = mode !== 'exam';
 
   useEffect(() => setConfirmFinish(false), [currentQuestion]);
   useEffect(() => {
@@ -69,7 +89,12 @@ export default function Exam({
     return () => clearTimeout(t);
   }, [confirmFinish]);
 
-  const next = () => (isLast ? onFinish() : onGoTo(currentQuestion + 1));
+  const requestFinish = () => (confirmFinish || unanswered === 0 ? onFinish() : setConfirmFinish(true));
+  const next = () => {
+    if (!isLast) onGoTo(currentQuestion + 1);
+    else if (liveCorrection) onFinish();
+    else requestFinish();
+  };
 
   // Raccourcis : A à E pour répondre, Entrée pour valider / continuer, flèches pour naviguer.
   useEffect(() => {
@@ -80,7 +105,7 @@ export default function Exam({
       if (LETTERS.includes(key) && !showExplanation) {
         onSelect(key);
       } else if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement)) {
-        if (showExplanation) next();
+        if (showExplanation || (!liveCorrection && answer)) next();
         else if (answer) onValidate();
       } else if (e.key === 'ArrowRight' && !isLast) {
         onGoTo(currentQuestion + 1);
@@ -110,7 +135,7 @@ export default function Exam({
         <div className="exam-top-inner">
           <div className="qpos">
             Question {currentQuestion + 1}
-            <small> sur {questions.length} · {level.title}{mode === 'review' ? ' · révision' : ''}</small>
+            <small> sur {questions.length} · {level.title}{MODE_SUFFIX[mode] ?? ''}</small>
           </div>
           <div className="ticks" aria-hidden="true">
             {questions.map((q, i) => (
@@ -134,7 +159,19 @@ export default function Exam({
             <span className="pts">{question.points} points</span>
           </div>
 
-          <Figure key={question.image} question={question} />
+          <div className="scratch-tools" role="toolbar" aria-label="Brouillon">
+            <button className={`chip ${drawing ? 'on' : ''}`} aria-pressed={drawing} onClick={() => setDrawing((d) => !d)}>
+              ✎ Brouillon
+            </button>
+            {(drawing || strokes.length > 0) && (
+              <>
+                <button className="chip" onClick={() => setStrokes(strokes.slice(0, -1))} disabled={!strokes.length}>Annuler</button>
+                <button className="chip" onClick={() => setStrokes([])} disabled={!strokes.length}>Tout effacer</button>
+              </>
+            )}
+          </div>
+
+          <Figure key={question.image} question={question} strokes={strokes} onStrokes={setStrokes} drawing={drawing} />
 
           <div className="answer-panel">
             <div className="answers" role="radiogroup" aria-label="Ta réponse">
@@ -174,7 +211,17 @@ export default function Exam({
                 ← <span className="wide-only">Précédente</span>
               </button>
               <div className="actions-right">
-              {showExplanation ? (
+              {!liveCorrection ? (
+                isLast ? (
+                  <button className="btn primary grow" onClick={requestFinish}>
+                    {confirmFinish ? `Confirmer : ${unanswered} sans réponse` : 'Rendre ma copie'}
+                  </button>
+                ) : (
+                  <button className={`btn grow ${answer ? 'primary' : ''}`} onClick={next}>
+                    {answer ? 'Question suivante →' : 'Passer →'}
+                  </button>
+                )
+              ) : showExplanation ? (
                 <button className="btn primary grow" onClick={next}>
                   {isLast ? 'Voir mes résultats' : 'Question suivante →'}
                 </button>
@@ -218,13 +265,15 @@ export default function Exam({
           </div>
           <button
             className={`btn hand-in ${confirmFinish ? 'armed' : ''}`}
-            onClick={() => (confirmFinish || unanswered === 0 ? onFinish() : setConfirmFinish(true))}
+            onClick={requestFinish}
           >
             {confirmFinish
               ? `Confirmer : ${unanswered} question${unanswered > 1 ? 's' : ''} sans réponse`
               : 'Rendre ma copie'}
           </button>
-          <p className="kbd-hint">Clavier : touches A à E pour répondre, Entrée pour valider, flèches pour changer de question.</p>
+          <p className="kbd-hint">
+            Clavier : touches A à E pour répondre, Entrée pour {liveCorrection ? 'valider' : 'passer à la suivante'}, flèches pour changer de question.
+          </p>
         </aside>
       </main>
     </div>

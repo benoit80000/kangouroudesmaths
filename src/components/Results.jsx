@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { computeScore, formatScore } from '../lib/progress.js';
+import { computeScore, formatScore, MODE_SUFFIX } from '../lib/progress.js';
 import Logo from './Logo.jsx';
 
 const STATUS_LABEL = { correct: 'juste', incorrect: 'fausse', skipped: 'sans réponse', none: 'sans corrigé' };
@@ -32,7 +32,7 @@ export default function Results({ level, mode, profile, questions, questionIndic
 
       <main className="results">
         <section className="card results-card">
-          <span className="label">{level.title}{mode === 'review' ? ' · révision' : ''}</span>
+          <span className="label">{level.title}{MODE_SUFFIX[mode] ?? ''}</span>
           <h1>{message}</h1>
 
           <div className="score">
@@ -74,6 +74,40 @@ export default function Results({ level, mode, profile, questions, questionIndic
               </button>
             )}
           </div>
+
+          <section className="corrige" aria-labelledby="corrige-title">
+            <h2 id="corrige-title">Corrigé détaillé</h2>
+            <p className="muted small">Ouvre une question pour revoir la figure et l'explication.</p>
+            <ol className="corrige-list">
+              {questions.map((q, i) => {
+                const status = statuses[i];
+                return (
+                  <li key={i}>
+                    <details className={`corrige-item c-${status}`}>
+                      <summary>
+                        <span className="c-num">{q.id}</span>
+                        <span className="c-text">
+                          {status === 'correct' && <>Juste : {answers[i]}</>}
+                          {status === 'incorrect' && <>Tu as répondu {answers[i]}, la bonne réponse est {q.correct}</>}
+                          {status === 'skipped' && <>Sans réponse : la bonne réponse est {q.correct}</>}
+                          {status === 'none' && <>Pas de corrigé{answers[i] ? ` (tu as répondu ${answers[i]})` : ''}</>}
+                        </span>
+                        <span className="c-pts">
+                          {status === 'correct' ? `+${q.points}` : status === 'incorrect' ? `−${formatScore(q.points / 4)}` : '0'}
+                        </span>
+                      </summary>
+                      <div className="corrige-body">
+                        <div className="figure-scroll">
+                          <img className="corrige-img" src={q.image} alt={q.text ? `Exercice ${q.id} : ${q.text}` : `Exercice ${q.id}`} loading="lazy" />
+                        </div>
+                        {q.explanation ? <p>{q.explanation}</p> : <p className="muted">Pas encore d'explication pour cette question.</p>}
+                      </div>
+                    </details>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
         </section>
       </main>
     </div>
