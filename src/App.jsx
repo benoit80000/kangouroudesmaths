@@ -25,14 +25,14 @@ const saved = loadSavedState();
 const initial = {
   // Une épreuve en cours au moment de fermer la page est proposée en reprise depuis l'accueil.
   gameState: saved?.gameState === 'results' && saved?.resultSaved ? 'results' : 'welcome',
-  selectedLevel: LEVELS[saved?.selectedLevel] ? saved.selectedLevel : DEFAULT_LEVEL,
+  selectedLevel: Object.hasOwn(LEVELS, saved?.selectedLevel ?? '') ? saved.selectedLevel : DEFAULT_LEVEL,
   sessionLength: saved?.sessionLength === 10 ? 10 : 24,
   sessionMode: saved?.sessionMode === 'review' ? 'review' : 'standard',
-  activeQuestionIndices: Array.isArray(saved?.activeQuestionIndices) ? saved.activeQuestionIndices : null,
+  activeQuestionIndices: saved?.activeQuestionIndices ?? null,
   currentQuestion: saved?.currentQuestion ?? 0,
   answers: saved?.answers ?? {},
   showExplanation: Boolean(saved?.showExplanation),
-  timeLeft: typeof saved?.timeLeft === 'number' ? saved.timeLeft : null,
+  timeLeft: saved?.timeLeft ?? null,
   profiles: saved?.profiles ?? DEFAULT_PROFILES,
   currentProfileId: saved?.currentProfileId ?? 'p1',
   resultSaved: Boolean(saved?.resultSaved),
@@ -50,12 +50,12 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState(initial.timeLeft);
   const [profiles, setProfiles] = useState(initial.profiles);
   const [currentProfileId, setCurrentProfileId] = useState(
-    initial.profiles[initial.currentProfileId] ? initial.currentProfileId : Object.keys(initial.profiles)[0]
+    Object.hasOwn(initial.profiles, initial.currentProfileId) ? initial.currentProfileId : Object.keys(initial.profiles)[0]
   );
   const [resultSaved, setResultSaved] = useState(initial.resultSaved);
 
   const level = getLevel(selectedLevel);
-  const profile = profiles[currentProfileId] ?? Object.values(profiles)[0];
+  const profile = (Object.hasOwn(profiles, currentProfileId) && profiles[currentProfileId]) || Object.values(profiles)[0];
   const gamification = useMemo(() => getGamification(profile), [profile]);
 
   const questionIndices = useMemo(() => {

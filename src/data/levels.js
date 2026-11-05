@@ -36,4 +36,4 @@ export const LEVELS = Object.fromEntries(years.map((year) => [`E${year}`, buildS
 export const LEVEL_KEYS = years.map((year) => `E${year}`);
 export const DEFAULT_LEVEL = LEVEL_KEYS[0];
 
-export const getLevel = (key) => LEVELS[key] ?? LEVELS[DEFAULT_LEVEL];
+export const getLevel = (key) => (Object.hasOwn(LEVELS, key) ? LEVELS[key] : LEVELS[DEFAULT_LEVEL]);

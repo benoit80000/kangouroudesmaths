@@ -30,3 +30,13 @@ L'appli demande aussi au navigateur un stockage persistant, pour éviter qu'il e
 
 Le site est déployé par Vercel à chaque push (production sur `main`, prévisualisation sur les autres branches).
 `vercel.json` fixe la configuration : `npm run build`, dossier publié `dist/`.
+
+## Sécurité
+
+- Aucune ressource externe : polices hébergées avec le site, aucun service tiers, aucune donnée envoyée sur Internet.
+- En-têtes de sécurité (`vercel.json`) : politique CSP stricte, protection contre l'intégration dans une autre page,
+  `nosniff`, `Referrer-Policy`, `Permissions-Policy`.
+- Toute donnée relue (sauvegarde du navigateur ou fichier importé) est validée champ par champ dans
+  `src/lib/progress.js` : types, bornes, clés spéciales refusées, taille d'import limitée à 1 Mo.
+- `npm audit` : 0 vulnérabilité.
+

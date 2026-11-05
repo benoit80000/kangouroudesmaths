@@ -9,27 +9,125 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const newProfile = (name) => ({ name, history: [], reviewItems: {} });
 export const DEFAULT_PROFILES = { p1: newProfile('Enfant 1') };
 
+// ---------- Validation des données (sauvegarde locale et fichiers importés) ----------
+// Toute donnée relue est reconstruite champ par champ : type, bornes et format vérifiés.
+// Cela évite qu'un fichier abîmé ou malveillant fasse planter l'appli de façon durable,
+// ou injecte des clés spéciales (__proto__, constructor…) dans les objets internes.
+
+const MAX_PROFILES = 20;
+const MAX_HISTORY = 100;
+const MAX_QUESTIONS = 24;
+const MAX_POINTS = 96; // 8×3 + 8×4 + 8×5
+const LETTER_SET = new Set(['A', 'B', 'C', 'D', 'E']);
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const LEVEL_RE = /^E\d{4}$/;
+const ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
+
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isSafeKey = (k) => typeof k === 'string' && !FORBIDDEN_KEYS.has(k);
+const isInt = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
+const num = (v, min, max) => (typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max ? v : null);
+
+export const isValidProfileId = (id) => isSafeKey(id) && ID_RE.test(id);
+export const isValidLevelKey = (key) => typeof key === 'string' && LEVEL_RE.test(key);
+
+function sanitizeName(name) {
+  if (typeof name !== 'string') return 'Enfant';
+  // Retire les caractères de contrôle ; le prénom est toujours affiché comme texte brut.
+  const clean = name.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 24);
+  return clean || 'Enfant';
+}
+
+function sanitizeHistoryEntry(h) {
+  if (!isPlainObject(h) || typeof h.date !== 'string' || !isValidLevelKey(h.level)) return null;
+  const time = Date.parse(h.date);
+  if (Number.isNaN(time)) return null;
+  const entry = {
+    date: new Date(time).toISOString(),
+    level: h.level,
+    questions: isInt(h.questions, 0, MAX_QUESTIONS) ? h.questions : 0,
+    mode: h.mode === 'review' ? 'review' : 'standard',
+    score: num(h.score, 0, MAX_POINTS) ?? 0,
+    maxScore: num(h.maxScore, 0, MAX_POINTS) ?? 0,
+    correct: isInt(h.correct, 0, MAX_QUESTIONS) ? h.correct : 0,
+    incorrect: isInt(h.incorrect, 0, MAX_QUESTIONS) ? h.incorrect : 0,
+    skipped: isInt(h.skipped, 0, MAX_QUESTIONS) ? h.skipped : 0,
+  };
+  const xp = num(h.xp, 0, 10000);
+  if (xp !== null) entry.xp = xp;
+  return entry;
+}
+
+function sanitizeReviewItems(items) {
+  const out = {};
+  if (!isPlainObject(items)) return out;
+  for (const item of Object.values(items)) {
+    if (!isPlainObject(item) || !isValidLevelKey(item.level) || !isInt(item.questionIndex, 0, MAX_QUESTIONS - 1)) continue;
+    const dueAt = num(item.dueAt, 0, 8.64e15);
+    if (dueAt === null) continue;
+    out[`${item.level}:${item.questionIndex}`] = {
+      level: item.level,
+      questionIndex: item.questionIndex,
+      stage: isInt(item.stage, 0, REVIEW_STEPS_DAYS.length - 1) ? item.stage : 0,
+      dueAt,
+      updatedAt: num(item.updatedAt, 0, 8.64e15) ?? 0,
+    };
+  }
+  return out;
+}
+
+export function sanitizeProfiles(raw) {
+  const profiles = {};
+  if (!isPlainObject(raw)) return profiles;
+  for (const [id, p] of Object.entries(raw)) {
+    if (Object.keys(profiles).length >= MAX_PROFILES) break;
+    if (!isValidProfileId(id) || !isPlainObject(p)) continue;
+    profiles[id] = {
+      name: sanitizeName(p.name),
+      history: (Array.isArray(p.history) ? p.history : [])
+        .map(sanitizeHistoryEntry)
+        .filter(Boolean)
+        .slice(0, MAX_HISTORY),
+      reviewItems: sanitizeReviewItems(p.reviewItems),
+    };
+  }
+  return profiles;
+}
+
+function sanitizeAnswers(answers) {
+  const out = {};
+  if (!isPlainObject(answers)) return out;
+  for (const [k, v] of Object.entries(answers)) {
+    const index = Number(k);
+    if (isInt(index, 0, MAX_QUESTIONS - 1) && LETTER_SET.has(v)) out[index] = v;
+  }
+  return out;
+}
+
 export function loadSavedState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const saved = JSON.parse(raw);
-    if (!saved || typeof saved !== 'object') return null;
-    if (saved.profiles && typeof saved.profiles === 'object') {
-      saved.profiles = Object.fromEntries(
-        Object.entries(saved.profiles).map(([id, profile]) => [
-          id,
-          {
-            name: profile?.name || 'Enfant',
-            history: Array.isArray(profile?.history) ? profile.history : [],
-            reviewItems:
-              profile?.reviewItems && typeof profile.reviewItems === 'object' ? profile.reviewItems : {},
-          },
-        ])
-      );
-      if (Object.keys(saved.profiles).length === 0) delete saved.profiles;
-    }
-    return saved;
+    if (!isPlainObject(saved)) return null;
+    const profiles = sanitizeProfiles(saved.profiles);
+    const indices = Array.isArray(saved.activeQuestionIndices)
+      ? [...new Set(saved.activeQuestionIndices.filter((i) => isInt(i, 0, MAX_QUESTIONS - 1)))]
+      : null;
+    return {
+      gameState: saved.gameState === 'results' ? 'results' : saved.gameState === 'playing' ? 'playing' : 'welcome',
+      selectedLevel: isValidLevelKey(saved.selectedLevel) ? saved.selectedLevel : null,
+      sessionLength: saved.sessionLength === 10 ? 10 : 24,
+      sessionMode: saved.sessionMode === 'review' ? 'review' : 'standard',
+      activeQuestionIndices: indices && indices.length ? indices : null,
+      currentQuestion: isInt(saved.currentQuestion, 0, MAX_QUESTIONS - 1) ? saved.currentQuestion : 0,
+      answers: sanitizeAnswers(saved.answers),
+      showExplanation: saved.showExplanation === true,
+      timeLeft: isInt(saved.timeLeft, 0, 60 * 60) ? saved.timeLeft : null,
+      profiles: Object.keys(profiles).length ? profiles : null,
+      currentProfileId: isValidProfileId(saved.currentProfileId) ? saved.currentProfileId : null,
+      resultSaved: saved.resultSaved === true,
+    };
   } catch {
     return null;
   }
@@ -205,27 +303,20 @@ export function exportFileName(date = new Date()) {
 }
 
 // Accepte un fichier exporté par l'appli, ou une sauvegarde brute du navigateur (ancien format).
+export const MAX_IMPORT_BYTES = 1024 * 1024;
+
 export function parseImport(text) {
+  if (typeof text !== 'string' || text.length > MAX_IMPORT_BYTES) {
+    throw new Error('Ce fichier est trop volumineux pour être une sauvegarde Kangourou.');
+  }
   let data;
   try {
     data = JSON.parse(text);
   } catch {
     throw new Error("Ce fichier n'est pas une sauvegarde Kangourou (format illisible).");
   }
-  const raw = data?.profiles;
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || Object.keys(raw).length === 0) {
-    throw new Error("Ce fichier ne contient aucun profil Kangourou.");
-  }
-  const profiles = {};
-  for (const [id, p] of Object.entries(raw)) {
-    if (!p || typeof p !== 'object') continue;
-    profiles[id] = {
-      name: typeof p.name === 'string' && p.name.trim() ? p.name.trim().slice(0, 24) : 'Enfant',
-      history: Array.isArray(p.history) ? p.history.filter((h) => h && typeof h === 'object' && h.date) : [],
-      reviewItems: p.reviewItems && typeof p.reviewItems === 'object' && !Array.isArray(p.reviewItems) ? p.reviewItems : {},
-    };
-  }
-  if (Object.keys(profiles).length === 0) throw new Error("Ce fichier ne contient aucun profil Kangourou.");
+  const profiles = sanitizeProfiles(data?.profiles);
+  if (Object.keys(profiles).length === 0) throw new Error('Ce fichier ne contient aucun profil Kangourou.');
   return profiles;
 }
 
@@ -242,6 +333,7 @@ export function mergeProfiles(current, imported) {
       (merged[id] && id) ||
       Object.keys(merged).find((k) => merged[k].name.toLowerCase() === incoming.name.toLowerCase());
     if (!targetId) {
+      if (Object.keys(merged).length >= MAX_PROFILES) continue;
       merged[id] = incoming;
       addedProfiles++;
       addedSessions += incoming.history.length;
@@ -259,7 +351,7 @@ export function mergeProfiles(current, imported) {
       ...existing,
       history: [...existing.history, ...newEntries]
         .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 100),
+        .slice(0, MAX_HISTORY),
       reviewItems,
     };
   }

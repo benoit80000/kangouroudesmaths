@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { parseImport } from '../lib/progress.js';
+import { parseImport, MAX_IMPORT_BYTES } from '../lib/progress.js';
 
 export default function ProfileMenu({ profiles, currentProfileId, profile, level, onSwitch, onAdd, onRename, onResetAll, onExport, onImport }) {
   const [open, setOpen] = useState(false);
@@ -12,6 +12,7 @@ export default function ProfileMenu({ profiles, currentProfileId, profile, level
   const handleFile = async (file) => {
     if (!file) return;
     try {
+      if (file.size > MAX_IMPORT_BYTES) throw new Error('Ce fichier est trop volumineux pour être une sauvegarde Kangourou.');
       const imported = parseImport(await file.text());
       const { addedSessions, addedProfiles } = onImport(imported);
       const parts = [];
