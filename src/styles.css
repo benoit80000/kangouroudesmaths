@@ -67,7 +67,7 @@ body {
 img { max-width: 100%; }
 button { font: inherit; color: inherit; }
 h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; text-wrap: balance; }
-h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 800; letter-spacing: -0.01em; }
+h1 { font-size: 2rem; font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 800; letter-spacing: -0.01em; }
 h2 { font-size: 1.15rem; font-weight: 700; }
 p { margin: 0; }
 :focus-visible { outline: 3px solid var(--kangou); outline-offset: 2px; }
@@ -128,6 +128,7 @@ p { margin: 0; }
 .app-top-inner, .exam-top-inner {
   max-width: 1180px;
   margin: 0 auto;
+  padding: 10px 16px;
   padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
   display: flex;
   align-items: center;
@@ -181,6 +182,8 @@ p { margin: 0; }
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
+  width: 300px;
+  max-width: calc(100vw - 32px);
   width: min(300px, calc(100vw - 32px));
   background: var(--sheet);
   border: 1px solid var(--rule);
@@ -255,6 +258,7 @@ p { margin: 0; }
 .home, .exam, .results {
   max-width: 1180px;
   margin: 0 auto;
+  padding: 24px 16px 48px;
   padding: 24px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px));
 }
 .home { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -378,23 +382,26 @@ p { margin: 0; }
   background: rgba(10, 14, 30, 0.82);
   display: grid;
   grid-template-rows: auto 1fr;
+  padding: 12px;
   padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
   gap: 10px;
 }
 .lightbox-close { justify-self: end; }
 .lightbox-scroll { overflow: auto; display: grid; place-items: center; }
-.lightbox-scroll img { background: #fff; border-radius: 10px; padding: 12px; width: min(1600px, 160vw); max-width: none; cursor: zoom-out; }
+.lightbox-scroll img { background: #fff; border-radius: 10px; padding: 12px; width: 160vw; width: min(1600px, 160vw); max-width: none; cursor: zoom-out; }
 @media (min-width: 1100px) { .lightbox-scroll img { width: min(1600px, 96vw); } }
 
 .answer-panel { display: grid; gap: 12px; }
 .answers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 .ans {
+  height: 64px;
   height: clamp(54px, 9vw, 76px);
   border: 2px solid var(--rule);
   border-radius: 14px;
   background: var(--sheet);
   font-family: var(--display);
   font-weight: 800;
+  font-size: 1.5rem;
   font-size: clamp(1.3rem, 3vw, 1.7rem);
   cursor: pointer;
 }
@@ -440,7 +447,7 @@ p { margin: 0; }
 .results { max-width: 720px; }
 .results-card { gap: 18px; padding: 24px; }
 .score { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.score b { font-family: var(--display); font-size: clamp(2.6rem, 8vw, 3.6rem); font-weight: 800; line-height: 1; }
+.score b { font-family: var(--display); font-size: 3rem; font-size: clamp(2.6rem, 8vw, 3.6rem); font-weight: 800; line-height: 1; }
 .score span { color: var(--ink-soft); font-size: 1.05rem; }
 .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .trio div { border-radius: 12px; padding: 10px 6px; display: grid; text-align: center; font-size: 0.85rem; }
@@ -515,6 +522,7 @@ p { margin: 0; }
     bottom: 0;
     z-index: 10;
     margin: 0 -12px -12px;
+    padding: 12px;
     padding: 12px 12px max(12px, env(safe-area-inset-bottom, 0px));
     background: var(--sheet);
     border-top: 1px solid var(--rule);
@@ -529,3 +537,22 @@ p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* Anciens navigateurs sans « gap » sur les rangées flex (Chrome < 84) : marges de repli.
+   La classe no-flex-gap est posée sur <html> par src/compat.js. */
+.no-flex-gap .row-between > * + *, .no-flex-gap .app-top-inner > * + *, .no-flex-gap .logo > * + *,
+.no-flex-gap .profile-pill > * + *, .no-flex-gap .menu-item > * + *, .no-flex-gap .rename-row > * + *,
+.no-flex-gap .backup-row > * + *, .no-flex-gap .resume-actions > * + *, .no-flex-gap .hist li > * + *,
+.no-flex-gap .exam-actions > * + *, .no-flex-gap .actions-right > * + *, .no-flex-gap .legend span > * + *,
+.no-flex-gap .score > * + *, .no-flex-gap .xpgain > * + *, .no-flex-gap .btn > * + * { margin-left: 8px; }
+.no-flex-gap .ticks i + i { margin-left: 3px; }
+.no-flex-gap .ticks i.gap { margin-left: 8px; }
+.no-flex-gap .badges > *, .no-flex-gap .scratch-tools > *, .no-flex-gap .legend > *,
+.no-flex-gap .results-actions > *, .no-flex-gap .start-row > *, .no-flex-gap .resume > * { margin: 0 8px 8px 0; }
+
+/* Message affiché par public/boot.js si l'appli ne démarre pas. */
+.boot-error { max-width: 640px; margin: 48px auto; padding: 24px; background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r); }
+.boot-error h1 { font-size: 1.4rem; margin-bottom: 12px; }
+.boot-error p { margin: 8px 0; }
+.boot-error pre { white-space: pre-wrap; word-break: break-all; font-size: 0.8rem; background: var(--paper); padding: 10px; border-radius: 8px; }
+

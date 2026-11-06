@@ -4,6 +4,7 @@ import '@fontsource/atkinson-hyperlegible/400.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
 import '@fontsource-variable/bricolage-grotesque/opsz.css';
 import App from './App.jsx';
+import { detectFlexGap } from './compat.js';
 import './styles.css';
 
 // Hors connexion : le service worker garde l'appli et les figures déjà vues.
@@ -12,6 +13,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
+
+detectFlexGap();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

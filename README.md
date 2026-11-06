@@ -39,6 +39,14 @@ npm test           # tests unitaires puis tests de parcours dans le navigateur
 Les explications de 2018, 2019, 2020 et 2024 sont rédigées pour l'appli d'après le raisonnement
 des corrigés officiels (dont la licence n'autorise pas la reproduction du texte).
 
+## Anciens appareils
+
+Le build produit deux versions : une moderne (avec quelques compléments pour Chrome 64 à 92) et une
+version de secours en ES5 (`@vitejs/plugin-legacy`) chargée automatiquement par les navigateurs sans
+modules JavaScript, par exemple de vieilles tablettes Android. Des valeurs de repli CSS couvrent
+`clamp()`, `min()`, `max()` et l'espacement des rangées flex. Si l'appli ne démarre quand même pas,
+`public/boot.js` affiche un message avec la version du navigateur au lieu d'un écran blanc.
+
 ## Hors connexion
 
 L'appli est installable (« Ajouter à l'écran d'accueil ») et fonctionne sans Internet : les sujets déjà
